@@ -1,0 +1,53 @@
+services:
+    notification-db:
+        image: mongo:latest
+        container_name: notification-db
+        ports:
+            - "27017:27017"
+        environment:
+            # Sets the root username and password
+            MONGO_INITDB_ROOT_USERNAME: admin
+            MONGO_INITDB_ROOT_PASSWORD: password
+        networks:
+            - event-booking-network
+        volumes:
+            - notification-db-data:/data/db
+        healthcheck:
+            test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+            start_period: 10s
+    notification-service:
+        build:
+            context: .
+            dockerfile: ./apps/notification-service/Dockerfile
+        ports:
+            - "3001:3001"
+        env_file:
+            - ./apps/notification-service/.env.dev
+        networks:
+            - event-booking-network
+        depends_on:
+            notification-db:
+                condition: service_healthy
+        healthcheck:
+            test:
+                [
+                    "CMD",
+                    "wget",
+                    "--spider",
+                    "-q",
+                    "http://localhost:3001/health",
+                ]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+            start_period: 20s
+        restart: always
+volumes:
+    notification-db-data:
+
+networks:
+    event-booking-network:
+        driver: bridge

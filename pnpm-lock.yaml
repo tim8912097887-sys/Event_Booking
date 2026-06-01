@@ -6,9 +6,24 @@ settings:
 
 catalogs:
   default:
+    '@types/express':
+      specifier: ^5.0.6
+      version: 5.0.6
     '@types/node':
       specifier: ^25.9.1
       version: 25.9.1
+    '@types/nodemailer':
+      specifier: ^8.0.0
+      version: 8.0.0
+    express:
+      specifier: ^5.2.1
+      version: 5.2.1
+    mongoose:
+      specifier: ^9.6.3
+      version: 9.6.3
+    nodemailer:
+      specifier: ^8.0.10
+      version: 8.0.10
     pino:
       specifier: ^10.3.1
       version: 10.3.1
@@ -18,9 +33,15 @@ catalogs:
     pino-pretty:
       specifier: ^13.1.3
       version: 13.1.3
+    tsx:
+      specifier: ^4.22.3
+      version: 4.22.3
     typescript:
       specifier: ^6.0.3
       version: 6.0.3
+    zod:
+      specifier: ^4.4.3
+      version: 4.4.3
 
 importers:
 
@@ -62,25 +83,37 @@ importers:
 
   apps/notification-service:
     dependencies:
+      '@event-booking/logger':
+        specifier: workspace:*
+        version: link:../../packages/logger
       express:
-        specifier: ^5.2.1
+        specifier: 'catalog:'
         version: 5.2.1
       mongoose:
-        specifier: ^9.6.3
+        specifier: 'catalog:'
         version: 9.6.3
       nodemailer:
-        specifier: ^8.0.10
+        specifier: 'catalog:'
         version: 8.0.10
       zod:
-        specifier: ^4.4.3
+        specifier: 'catalog:'
         version: 4.4.3
     devDependencies:
       '@types/express':
-        specifier: ^5.0.6
+        specifier: 'catalog:'
         version: 5.0.6
+      '@types/node':
+        specifier: 'catalog:'
+        version: 25.9.1
       '@types/nodemailer':
-        specifier: ^8.0.0
+        specifier: 'catalog:'
         version: 8.0.0
+      tsx:
+        specifier: 'catalog:'
+        version: 4.22.3
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
 
   packages/logger:
     dependencies:
