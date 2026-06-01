@@ -24,12 +24,14 @@ export class NotificationMapper {
 
     // Convert Mongoose Database Document -> Domain Entity format
     public static toDomain(doc: INotificationDoc): Notification {
-        return Notification.create(doc._id, {
+        return Notification.rehydrate(doc._id, {
             target: new NotificationTarget(doc.targetType, doc.targetId),
             recipientEmail: RecipientEmail.create(doc.recipientEmail),
             templateId: doc.templateId,
             payload: doc.payload,
             idempotencyKey: doc.idempotencyKey,
+            status: doc.status,
+            errorMessage: doc.errorMessage,
         });
     }
 }

@@ -41,4 +41,11 @@ export class Notification {
     public getProps(): NotificationProps {
         return { ...this.props };
     }
+
+    public static rehydrate(
+        id: string,
+        props: NotificationProps,
+    ): Notification {
+        return new Notification(id, props);
+    }
 }
