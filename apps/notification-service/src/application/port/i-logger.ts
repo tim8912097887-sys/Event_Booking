@@ -1,7 +1,6 @@
-// src/context/notifications/application/ports/ILogger.ts
 export interface ILogger {
-    info(message: string, meta?: any): void;
-    warn(message: string, meta?: any): void;
-    error(message: string, error?: any): void;
-    debug(message: string, meta?: any): void;
+    info(meta: any, message: string): void;
+    warn(meta: any, message: string): void;
+    error(meta: any, message: string): void;
+    debug(meta: any, message: string): void;
 }

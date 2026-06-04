@@ -2,9 +2,10 @@ import { Consumer } from "kafkajs";
 import { EventMap, EventName } from "./events.js";
 
 export class KafkaConsumer {
-    private handlers: Partial<
-        Record<EventName, (payload: any) => Promise<void>>
-    > = {};
+    private handlers = new Map<
+        EventName,
+        (payload: EventMap[EventName]) => Promise<void>
+    >();
 
     constructor(private readonly consumer: Consumer) {}
 
@@ -25,7 +26,7 @@ export class KafkaConsumer {
             fromBeginning: false,
         });
 
-        this.handlers[topic] = handler;
+        this.handlers.set(topic, handler as any);
     }
 
     async run() {
@@ -33,13 +34,32 @@ export class KafkaConsumer {
             eachMessage: async ({ topic, message }) => {
                 if (!message.value) return;
 
-                const handler = this.handlers[topic as EventName];
+                const handler = this.handlers.get(topic as EventName);
                 if (!handler) return;
-
+                const MAX_RETRIES = 5;
+                let attempts = 0;
                 const payload = JSON.parse(message.value.toString());
-
-                await handler(payload);
+                while (attempts < MAX_RETRIES) {
+                    try {
+                        await handler(payload);
+                        return;
+                    } catch (_error) {
+                        attempts += 1;
+                        const delay = Math.min(1000 * 2 ** attempts, 30000);
+                        console.error(
+                            `Failed to process message after ${attempts} attempts.`,
+                        );
+                        await this.sleep(delay);
+                    }
+                }
+                console.error(
+                    `Failed to process message after ${MAX_RETRIES} attempts.`,
+                );
             },
         });
+    }
+
+    async sleep(ms: number): Promise<void> {
+        return new Promise((resolve) => setTimeout(resolve, ms));
     }
 }

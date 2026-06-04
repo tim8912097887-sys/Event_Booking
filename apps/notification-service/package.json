@@ -17,17 +17,26 @@
     "license": "ISC",
     "packageManager": "pnpm@10.26.1",
     "dependencies": {
+        "@event-booking/logger": "workspace:*",
+        "@event-booking/message-broker": "workspace:*",
+        "@grpc/grpc-js": "catalog:",
+        "@opentelemetry/api": "catalog:",
+        "@opentelemetry/auto-instrumentations-node": "catalog:",
+        "@opentelemetry/exporter-trace-otlp-http": "catalog:",
+        "@opentelemetry/exporter-trace-otlp-grpc": "catalog:",
+        "@opentelemetry/resources": "catalog:",
+        "@opentelemetry/sdk-node": "catalog:",
         "express": "catalog:",
         "mongoose": "catalog:",
         "nodemailer": "catalog:",
-        "@event-booking/logger": "workspace:*",
+        "prom-client": "catalog:",
         "zod": "catalog:"
     },
     "devDependencies": {
         "@types/express": "catalog:",
+        "@types/node": "catalog:",
         "@types/nodemailer": "catalog:",
         "tsx": "catalog:",
-        "typescript": "catalog:",
-        "@types/node": "catalog:"
+        "typescript": "catalog:"
     }
 }

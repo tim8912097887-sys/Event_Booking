@@ -1,3 +1,4 @@
+import { stopTelemetry } from "#infrastructure/traces/telemetry.js";
 import { Server } from "http";
 import { initializeApp } from "./server.js";
 import { env } from "#infrastructure/config/env.js";
@@ -7,6 +8,24 @@ import {
     subscribeShutdown,
 } from "#infrastructure/shared/shutdown.js";
 import { dbConnection } from "#infrastructure/persistence/mongoose-connection.js";
+import { SendEventCreatedEmailUseCase } from "#application/use-cases/send-event-created-email.use-case.js";
+import { SendEventUpdatedEmailUseCase } from "#application/use-cases/send-event-updated-email.use-case.js";
+import { SendEventDeletedEmailUseCase } from "#application/use-cases/send-event-deleted-email.use-case.js";
+import { SmtpEmailSender } from "#infrastructure/email/smtp-email-sender.js";
+import {
+    getTransporter,
+    initializeEmailTransporter,
+} from "#infrastructure/email/smtp-transporter.js";
+import { Transporter } from "nodemailer";
+import { HandlebarsTemplateRenderer } from "#infrastructure/email/handlebars-template-renderer.js";
+import { NotificationConsumer } from "#infrastructure/messaging/notification-consumer.js";
+import {
+    brokerDisconnect,
+    messageBroker,
+} from "#infrastructure/messaging/message-broker.js";
+import { MongooseNotificationRepository } from "#infrastructure/persistence/mongoose-notification.repository.js";
+import { PrometheusNotificationMetrics } from "#infrastructure/metrics/prometheus-notification-metrics.js";
+import { OpenTelemetryTracer } from "#infrastructure/traces/otel-tracer.js";
 
 class AppServer {
     private static instance: AppServer;
@@ -30,6 +49,67 @@ class AppServer {
             // Initialize DB and subscribe its teardown immediately
             await dbConnection();
 
+            // Initialize email transporter
+
+            await initializeEmailTransporter();
+            const transporter = getTransporter() as Transporter;
+
+            const tracer = new OpenTelemetryTracer();
+            subscribeShutdown(stopTelemetry);
+
+            const emailSender = new SmtpEmailSender(
+                transporter,
+                logger,
+                tracer,
+            );
+            // Initialize use cases
+            const templateRenderer = new HandlebarsTemplateRenderer();
+
+            const notificationRepository = new MongooseNotificationRepository(
+                tracer,
+            );
+
+            const notificationMetrics = new PrometheusNotificationMetrics();
+            const sendEventCreatedEmailUseCase =
+                new SendEventCreatedEmailUseCase(
+                    emailSender,
+                    notificationRepository,
+                    templateRenderer,
+                    logger,
+                    notificationMetrics,
+                );
+
+            const sendEventUpdatedEmailUseCase =
+                new SendEventUpdatedEmailUseCase(
+                    emailSender,
+                    notificationRepository,
+                    templateRenderer,
+                    logger,
+                    notificationMetrics,
+                );
+
+            const sendEventDeletedEmailUseCase =
+                new SendEventDeletedEmailUseCase(
+                    emailSender,
+                    notificationRepository,
+                    templateRenderer,
+                    logger,
+                    notificationMetrics,
+                );
+            // Initialize message broker
+            const consumer = new NotificationConsumer(
+                messageBroker,
+                sendEventCreatedEmailUseCase,
+                sendEventUpdatedEmailUseCase,
+                sendEventDeletedEmailUseCase,
+                logger,
+                notificationMetrics,
+                tracer,
+            );
+            // Subscribe message broker
+            await consumer.start();
+            // Subscribe broker shutdown
+            subscribeShutdown(brokerDisconnect);
             // Initialize App and HTTP server
             const app = initializeApp();
             this.server = app.listen(env.PORT, () => {

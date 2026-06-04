@@ -14,6 +14,7 @@ WORKDIR /app
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 # workspace package manifests
 COPY packages/logger/package.json ./packages/logger/
+COPY packages/message-broker/package.json ./packages/message-broker/
 
 # service manifests
 COPY apps/notification-service/package.json ./apps/notification-service/

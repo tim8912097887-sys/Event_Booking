@@ -1,9 +1,17 @@
 import express from "express";
 import { errorHandler } from "#presentation/middlewares/error-handler.js";
 import { notFoundHandler } from "#presentation/middlewares/not-found-handler.js";
+import { register } from "#infrastructure/metrics/prometheus.js";
 
 export const initializeApp = () => {
     const app = express();
+
+    // Metrics endpoint
+    app.get("/metrics", async (_req, res) => {
+        res.set("Content-Type", register.contentType);
+
+        res.end(await register.metrics());
+    });
 
     // Healthy check endpoint
     app.get("/health", (_req, res) => {

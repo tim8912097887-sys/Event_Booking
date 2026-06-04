@@ -1,5 +1,6 @@
 import { ILogger } from "#application/port/i-logger.js";
 import { NotificationMetrics } from "#application/port/notification-metrics.js";
+import { Tracer } from "#application/port/notification-trace.js";
 import { SendEventCreatedEmailUseCase } from "#application/use-cases/send-event-created-email.use-case.js";
 import { SendEventDeletedEmailUseCase } from "#application/use-cases/send-event-deleted-email.use-case.js";
 import { SendEventUpdatedEmailUseCase } from "#application/use-cases/send-event-updated-email.use-case.js";
@@ -18,6 +19,8 @@ export class NotificationConsumer {
         private readonly logger: ILogger,
 
         private readonly metrics: NotificationMetrics,
+
+        private readonly tracer: Tracer,
     ) {}
 
     async start() {
@@ -34,96 +37,139 @@ export class NotificationConsumer {
             );
 
             await consumer.subscribe(TOPICS.EVENT_CREATED, async (payload) => {
-                // Process duration metrics
-                const endProcessing = this.metrics.processingStarted(
-                    TOPICS.EVENT_CREATED,
-                );
-                // Consume metrics
-                this.metrics.eventConsumed(TOPICS.EVENT_CREATED);
-                this.logger.info(
-                    {
-                        topic: TOPICS.EVENT_CREATED,
-                        eventId: payload.eventId,
+                await this.tracer.startActiveSpan(
+                    "process_event_created",
+                    async (span) => {
+                        // Process duration metrics
+                        const endProcessing = this.metrics.processingStarted(
+                            TOPICS.EVENT_CREATED,
+                        );
+                        // Consume metrics
+                        this.metrics.eventConsumed(TOPICS.EVENT_CREATED);
+                        this.logger.info(
+                            {
+                                topic: TOPICS.EVENT_CREATED,
+                                eventId: payload.eventId,
+                            },
+                            "notification.event.received",
+                        );
+                        try {
+                            span.setAttributes({
+                                "messaging.system": "kafka",
+                                "messaging.destination": TOPICS.EVENT_CREATED,
+                                "messaging.operation": "process",
+                                "event.id": payload.eventId,
+                            });
+
+                            await this.createdUseCase.execute(payload);
+                            // Process count metrics
+                            this.metrics.eventProcessed(TOPICS.EVENT_CREATED);
+                        } catch (error: any) {
+                            this.logger.error(
+                                error,
+                                "notification.event.error",
+                            );
+                            this.metrics.eventFailed(
+                                TOPICS.EVENT_CREATED,
+                                error.message,
+                            );
+                            // Rethrow to trigger retry mechanism in message broker
+                            throw error;
+                        } finally {
+                            endProcessing();
+                        }
                     },
-                    "notification.event.received",
                 );
-                try {
-                    await this.createdUseCase.execute(payload);
-                    // Process count metrics
-                    this.metrics.eventProcessed(TOPICS.EVENT_CREATED);
-                } catch (error: any) {
-                    this.logger.error(error, "notification.event.error");
-                    this.metrics.eventFailed(
-                        TOPICS.EVENT_CREATED,
-                        error.message,
-                    );
-                    // Rethrow to trigger retry mechanism in message broker
-                    throw error;
-                } finally {
-                    endProcessing();
-                }
             });
 
             await consumer.subscribe(TOPICS.EVENT_UPDATED, async (payload) => {
-                // Consume metrics
-                this.metrics.eventConsumed(TOPICS.EVENT_UPDATED);
-                this.logger.info(
-                    {
-                        topic: TOPICS.EVENT_UPDATED,
-                        eventId: payload.eventId,
+                await this.tracer.startActiveSpan(
+                    "process_event_updated",
+                    async (span) => {
+                        // Consume metrics
+                        this.metrics.eventConsumed(TOPICS.EVENT_UPDATED);
+                        this.logger.info(
+                            {
+                                topic: TOPICS.EVENT_UPDATED,
+                                eventId: payload.eventId,
+                            },
+                            "notification.event.received",
+                        );
+                        // Process duration metrics
+                        const endProcessing = this.metrics.processingStarted(
+                            TOPICS.EVENT_UPDATED,
+                        );
+                        try {
+                            span.setAttributes({
+                                "messaging.system": "kafka",
+                                "messaging.destination": TOPICS.EVENT_UPDATED,
+                                "messaging.operation": "process",
+                                "event.id": payload.eventId,
+                            });
+                            await this.updatedUseCase.execute(payload);
+                            // Process count metrics
+                            this.metrics.eventProcessed(TOPICS.EVENT_UPDATED);
+                        } catch (error: any) {
+                            this.logger.error(
+                                error,
+                                "notification.event.error",
+                            );
+                            this.metrics.eventFailed(
+                                TOPICS.EVENT_UPDATED,
+                                error.message,
+                            );
+                            // Rethrow to trigger retry mechanism in message broker
+                            throw error;
+                        } finally {
+                            endProcessing();
+                        }
                     },
-                    "notification.event.received",
                 );
-                // Process duration metrics
-                const endProcessing = this.metrics.processingStarted(
-                    TOPICS.EVENT_UPDATED,
-                );
-                try {
-                    await this.updatedUseCase.execute(payload);
-                    // Process count metrics
-                    this.metrics.eventProcessed(TOPICS.EVENT_UPDATED);
-                } catch (error: any) {
-                    this.logger.error(error, "notification.event.error");
-                    this.metrics.eventFailed(
-                        TOPICS.EVENT_UPDATED,
-                        error.message,
-                    );
-                    // Rethrow to trigger retry mechanism in message broker
-                    throw error;
-                } finally {
-                    endProcessing();
-                }
             });
 
             await consumer.subscribe(TOPICS.EVENT_DELETED, async (payload) => {
-                // Consume metrics
-                this.metrics.eventConsumed(TOPICS.EVENT_DELETED);
-                // Process duration metrics
-                const endProcessing = this.metrics.processingStarted(
-                    TOPICS.EVENT_DELETED,
-                );
-                this.logger.info(
-                    {
-                        topic: TOPICS.EVENT_DELETED,
-                        eventId: payload.eventId,
+                await this.tracer.startActiveSpan(
+                    "process_event_deleted",
+                    async (span) => {
+                        // Consume metrics
+                        this.metrics.eventConsumed(TOPICS.EVENT_DELETED);
+                        // Process duration metrics
+                        const endProcessing = this.metrics.processingStarted(
+                            TOPICS.EVENT_DELETED,
+                        );
+                        this.logger.info(
+                            {
+                                topic: TOPICS.EVENT_DELETED,
+                                eventId: payload.eventId,
+                            },
+                            "notification.event.received",
+                        );
+                        try {
+                            span.setAttributes({
+                                "messaging.system": "kafka",
+                                "messaging.destination": TOPICS.EVENT_DELETED,
+                                "messaging.operation": "process",
+                                "event.id": payload.eventId,
+                            });
+                            await this.deletedUseCase.execute(payload);
+                            // Process count metrics
+                            this.metrics.eventProcessed(TOPICS.EVENT_DELETED);
+                        } catch (error: any) {
+                            this.logger.error(
+                                error,
+                                "notification.event.error",
+                            );
+                            this.metrics.eventFailed(
+                                TOPICS.EVENT_DELETED,
+                                error.message,
+                            );
+                            // Rethrow to trigger retry mechanism in message broker
+                            throw error;
+                        } finally {
+                            endProcessing();
+                        }
                     },
-                    "notification.event.received",
                 );
-                try {
-                    await this.deletedUseCase.execute(payload);
-                    // Process count metrics
-                    this.metrics.eventProcessed(TOPICS.EVENT_DELETED);
-                } catch (error: any) {
-                    this.logger.error(error, "notification.event.error");
-                    this.metrics.eventFailed(
-                        TOPICS.EVENT_DELETED,
-                        error.message,
-                    );
-                    // Rethrow to trigger retry mechanism in message broker
-                    throw error;
-                } finally {
-                    endProcessing();
-                }
             });
 
             this.logger.info(
