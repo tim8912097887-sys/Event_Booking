@@ -3,6 +3,7 @@ import {
     EventAlreadyDeletedError,
     EventDeletedModificationError,
     EventNotDraftError,
+    PublishedEventDeletionError,
 } from "#domain/errors/entity.error.js";
 import { EventCapacity } from "#domain/value-objects/event-capacity.vo.js";
 import { EventDate } from "#domain/value-objects/event-date.vo.js";
@@ -11,12 +12,13 @@ import { EventId } from "#domain/value-objects/event-id.vo.js";
 import { EventName } from "#domain/value-objects/event-name.vo.js";
 import { EventPrice } from "#domain/value-objects/event-price.vo.js";
 import { UserId } from "#domain/value-objects/user-id.vo.js";
+import { IEvent } from "#application/port/i-event.js";
 
-enum EventStatus {
-    PUBLISHED = "PUBLISHED",
-    CANCELLED = "CANCELLED",
-    DRAFT = "DRAFT",
-}
+const EventStatus = {
+    PUBLISHED: "PUBLISHED",
+    CANCELLED: "CANCELLED",
+    DRAFT: "DRAFT",
+} as const;
 
 export class Event {
     private constructor(
@@ -27,24 +29,27 @@ export class Event {
         private date: EventDate,
         private capacity: EventCapacity,
         private price: EventPrice,
-        private status: EventStatus,
+        private status: (typeof EventStatus)[keyof typeof EventStatus],
         private deletedAt: Date | null,
     ) {}
 
-    static create(
-        name: string,
-        description: string,
-        creatorId: string,
-        date: Date,
-        capacity: number,
-        price: number,
-    ) {
+    static create({
+        name,
+        description,
+        creatorId,
+        date,
+        capacity,
+        price,
+    }: Omit<
+        IEvent & { date: string },
+        "id" | "status" | "createdAt" | "updatedAt" | "deletedAt"
+    >) {
         return new Event(
             EventId.generate(),
             new EventName(name),
             new EventDescription(description),
             new UserId(creatorId),
-            EventDate.fromDate(date),
+            EventDate.fromISOString(date),
             new EventCapacity(capacity),
             new EventPrice(price),
             EventStatus.DRAFT,
@@ -52,17 +57,17 @@ export class Event {
         );
     }
 
-    reconstitute(
-        id: string,
-        name: string,
-        description: string,
-        creatorId: string,
-        date: Date,
-        capacity: number,
-        price: number,
-        status: EventStatus,
-        deletedAt: Date | null,
-    ) {
+    static reconstitute({
+        id,
+        name,
+        description,
+        creatorId,
+        date,
+        capacity,
+        price,
+        status,
+        deletedAt,
+    }: IEvent) {
         return new Event(
             EventId.from(id),
             new EventName(name),
@@ -76,9 +81,19 @@ export class Event {
         );
     }
 
-    changeDate(newDate: Date) {
+    changeName(newName: string) {
         this.ensureDraft();
-        this.date = EventDate.fromDate(newDate);
+        this.name = new EventName(newName);
+    }
+
+    changeDescription(newDescription: string) {
+        this.ensureDraft();
+        this.description = new EventDescription(newDescription);
+    }
+
+    changeDate(newDate: string) {
+        this.ensureDraft();
+        this.date = EventDate.fromISOString(newDate);
     }
 
     changeCapacity(newCapacity: number) {
@@ -93,7 +108,7 @@ export class Event {
 
     delete() {
         if (this.status === EventStatus.PUBLISHED) {
-            throw new EventAlreadyDeletedError();
+            throw new PublishedEventDeletionError();
         }
         if (this.deletedAt !== null) {
             throw new EventAlreadyDeletedError();
@@ -145,7 +160,7 @@ export class Event {
         return this.price.getValue();
     }
 
-    getStatus(): EventStatus {
+    getStatus(): (typeof EventStatus)[keyof typeof EventStatus] {
         return this.status;
     }
 

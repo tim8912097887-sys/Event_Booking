@@ -72,6 +72,24 @@ services:
             - event-booking-network
         volumes:
             - kafka-data:/var/lib/kafka/data
+    event-db:
+        image: postgres:14-alpine
+        environment:
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: password
+            POSTGRES_DB: event-service
+        ports:
+            - 5432:5432
+        volumes:
+            - event-service-db-data:/var/lib/postgresql/data
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U postgres -d event-service"]
+            interval: 5s
+            timeout: 5s
+            retries: 5
+            start_period: 10s
+        networks:
+            - event-booking-network
     notification-db:
         image: mongo:latest
         container_name: notification-db
@@ -122,8 +140,50 @@ services:
             retries: 5
             start_period: 20s
         restart: always
+    event-service-migrations:
+        build:
+            context: .
+            dockerfile: ./apps/event-service/Dockerfile
+        env_file:
+            - ./apps/event-service/.env.dev
+        depends_on:
+            event-db:
+                condition: service_healthy
+        command: npx drizzle-kit migrate
+        networks:
+            - event-booking-network
+    event-service:
+        build:
+            context: .
+            dockerfile: ./apps/event-service/Dockerfile
+        env_file:
+            - ./apps/event-service/.env.dev
+        ports:
+            - "3002:3002"
+        networks:
+            - event-booking-network
+        depends_on:
+            event-db:
+                condition: service_healthy
+            event-service-migrations:
+                condition: service_completed_successfully
+        healthcheck:
+            test:
+                [
+                    "CMD",
+                    "wget",
+                    "--spider",
+                    "-q",
+                    "http://localhost:3002/health",
+                ]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+            start_period: 20s
+        restart: always
 volumes:
     notification-db-data:
+    event-service-db-data:
     kafka-data:
 networks:
     event-booking-network:
