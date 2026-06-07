@@ -3,6 +3,7 @@ import type { FastifyInstance } from "fastify";
 import { initializeApp } from "./server.js";
 import { env } from "#infrastructure/config/env.js";
 import { logger } from "#infrastructure/logging/logger.js";
+import { publisher } from "#presentation/containers/event.container.js";
 
 class AppServer {
     private static instance: AppServer;
@@ -35,13 +36,17 @@ class AppServer {
 
             logger.info({
                 event: "server_started",
-                service: "user-service",
+                service: "event-service",
                 port: env.PORT,
             });
+
+            this.setupProcessHandlers();
+            // Check for pending events constantly
+            await publisher.start();
         } catch (error) {
             logger.error({
                 event: "server_start_failed",
-                service: "user-service",
+                service: "event-service",
                 err: error,
             });
 
@@ -76,14 +81,14 @@ class AppServer {
 
         logger.info({
             event: "shutdown_initiated",
-            service: "user-service",
+            service: "event-service",
             signal,
         });
 
         if (reason) {
             logger.error({
                 event: "shutdown_reason",
-                service: "user-service",
+                service: "event-service",
                 reason,
             });
         }
@@ -91,7 +96,7 @@ class AppServer {
         const forceExit = setTimeout(() => {
             logger.error({
                 event: "shutdown_timeout_exceeded",
-                service: "user-service",
+                service: "event-service",
                 timeoutMs: this.shutdownTimeout,
             });
 
@@ -107,14 +112,14 @@ class AppServer {
 
             logger.info({
                 event: "shutdown_completed",
-                service: "user-service",
+                service: "event-service",
             });
 
             process.exit(code);
         } catch (error) {
             logger.error({
                 event: "shutdown_failed",
-                service: "user-service",
+                service: "event-service",
                 err: error,
             });
 

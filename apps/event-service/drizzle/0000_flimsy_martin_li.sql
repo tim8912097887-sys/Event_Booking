@@ -14,3 +14,14 @@ CREATE TABLE "events" (
 	"deleted_at" timestamp with time zone,
 	CONSTRAINT "events_slug_unique" UNIQUE("slug")
 );
+--> statement-breakpoint
+CREATE TABLE "outbox_events" (
+	"id" uuid PRIMARY KEY NOT NULL,
+	"event_name" varchar(255) NOT NULL,
+	"payload" jsonb NOT NULL,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"published_at" timestamp
+);
+--> statement-breakpoint
+CREATE INDEX "idx_events_published_date" ON "events" USING btree ("date" DESC NULLS LAST,"price","id") WHERE "events"."status" = 'PUBLISHED' AND "events"."deleted_at" IS NULL;--> statement-breakpoint
+CREATE INDEX "idx_events_published_price" ON "events" USING btree ("price","date" DESC NULLS LAST,"id") WHERE "events"."status" = 'PUBLISHED' AND "events"."deleted_at" IS NULL;

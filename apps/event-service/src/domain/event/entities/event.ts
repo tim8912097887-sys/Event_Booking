@@ -14,6 +14,9 @@ import { EventPrice } from "#domain/value-objects/event-price.vo.js";
 import { UserId } from "#domain/value-objects/user-id.vo.js";
 import { IEvent } from "#application/port/i-event.js";
 import { EventSlug } from "#domain/value-objects/event-slug.vo.js";
+import { AggregateRoot } from "../aggregate-root.js";
+import { EventPublishedDomainEvent } from "#domain/message/event-published-domain-event.js";
+import { EventCancelledDomainEvent } from "#domain/message/event-cancelled-domain-event.js";
 
 const EventStatus = {
     PUBLISHED: "PUBLISHED",
@@ -21,7 +24,7 @@ const EventStatus = {
     DRAFT: "DRAFT",
 } as const;
 
-export class Event {
+export class Event extends AggregateRoot {
     private constructor(
         private readonly id: EventId,
         private name: EventName,
@@ -33,7 +36,9 @@ export class Event {
         private price: EventPrice,
         private status: (typeof EventStatus)[keyof typeof EventStatus],
         private deletedAt: Date | null,
-    ) {}
+    ) {
+        super();
+    }
 
     static create({
         name,
@@ -121,9 +126,18 @@ export class Event {
         this.deletedAt = new Date();
     }
 
-    publish() {
+    publish(ownerEmail: string) {
         this.ensureDraft();
         this.status = EventStatus.PUBLISHED;
+        this.addDomainEvent(
+            new EventPublishedDomainEvent(
+                this.id.getValue(),
+                this.slug.getValue(),
+                this.name.getValue(),
+                this.date.getValue().toISOString(),
+                ownerEmail,
+            ),
+        );
     }
 
     cancel() {
@@ -135,6 +149,13 @@ export class Event {
         }
 
         this.status = EventStatus.CANCELLED;
+        this.addDomainEvent(
+            new EventCancelledDomainEvent(
+                this.id.getValue(),
+                this.name.getValue(),
+                this.slug.getValue(),
+            ),
+        );
     }
 
     changeSlug(newSlug: string) {

@@ -1,42 +1,16 @@
 import { EmailSender } from "#application/port/email-sender.js";
-import { ILogger } from "#application/port/i-logger.js";
-import { NotificationMetrics } from "#application/port/notification-metrics.js";
 import { NotificationRepository } from "#application/port/notification-repository.js";
 import { TemplateRenderer } from "#application/port/template-renderer.js";
-import { Notification } from "#domain/entities/notification.entity.js";
-import { NotificationTarget } from "#domain/value-objects/notification-target.vo.js";
-import { RecipientEmail } from "#domain/value-objects/recipient-email.vo.js";
 import { env } from "#infrastructure/config/env.js";
+import { Notification } from "#domain/entities/notification.entity.js";
+import { RecipientEmail } from "#domain/value-objects/recipient-email.vo.js";
 import { randomUUID } from "crypto";
+import { NotificationTarget } from "#domain/value-objects/notification-target.vo.js";
+import { ILogger } from "#application/port/i-logger.js";
+import { NotificationMetrics } from "#application/port/notification-metrics.js";
+import { EventMap } from "@event-booking/message-broker";
 
-export type EventUpdatedEvent = {
-    eventId: string;
-    ownerEmail: string;
-
-    changes: {
-        name?: {
-            old: string;
-            new: string;
-        };
-
-        date?: {
-            old: string;
-            new: string;
-        };
-
-        price?: {
-            old: number;
-            new: number;
-        };
-
-        totalPeople?: {
-            old: number;
-            new: number;
-        };
-    };
-};
-
-export class SendEventUpdatedEmailUseCase {
+export class SendEventPublishedEmailUseCase {
     constructor(
         private readonly emailSender: EmailSender,
         private readonly repository: NotificationRepository,
@@ -45,9 +19,9 @@ export class SendEventUpdatedEmailUseCase {
         private readonly metrics: NotificationMetrics,
     ) {}
 
-    async execute(event: EventUpdatedEvent) {
+    async execute(event: EventMap["event.published"]) {
         // Check idempotency to prevent duplicate email sending
-        const idempotencyKey = `event-updated:${event.eventId}`;
+        const idempotencyKey = `event-published:${event.eventId}`;
         const existingNotification =
             await this.repository.findByIdempotencyKey(idempotencyKey);
         if (existingNotification) {
@@ -64,7 +38,7 @@ export class SendEventUpdatedEmailUseCase {
         }
 
         const email = await this.templateRenderer.render(
-            "event-updated",
+            "event-published",
             event,
         );
 
@@ -73,10 +47,13 @@ export class SendEventUpdatedEmailUseCase {
         const notification = Notification.create(notificationId, {
             target: new NotificationTarget(target, event.eventId),
             payload: event,
-            templateId: "event-updated",
+            templateId: "event-published",
             recipientEmail: RecipientEmail.create(event.ownerEmail),
             idempotencyKey,
         });
+
+        // Save record prevent loss
+        await this.repository.save(notification);
 
         this.logger.info(
             {
@@ -84,17 +61,13 @@ export class SendEventUpdatedEmailUseCase {
                 eventId: event.eventId,
                 templateId: notification.getProps().templateId,
             },
-            "notification.created",
+            "notification.published",
         );
-
-        // Save record prevent loss
-        await this.repository.save(notification);
 
         // email sending process
         const endEmailProcessing = this.metrics.emailProcessingStarted(
             notification.getProps().templateId,
         );
-
         try {
             await this.emailSender.send({
                 to: event.ownerEmail,
@@ -102,6 +75,7 @@ export class SendEventUpdatedEmailUseCase {
                 html: email.html,
                 from: env.EMAIL_HOST,
             });
+
             // Send metrics
             this.metrics.emailSent(notification.getProps().templateId);
 
@@ -118,7 +92,6 @@ export class SendEventUpdatedEmailUseCase {
             notification.markAsSent();
         } catch (error: any) {
             notification.markAsFailed(error.message);
-
             // Send failed metrics
             this.metrics.emailFailed(
                 notification.getProps().templateId,

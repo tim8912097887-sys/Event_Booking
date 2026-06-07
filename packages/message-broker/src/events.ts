@@ -1,44 +1,15 @@
 export type EventMap = {
-    "event.created": {
+    "event.published": {
         eventId: string;
+        slug: string;
         name: string;
         ownerEmail: string;
         date: string;
-        price: number;
-        totalPeople: number;
     };
-
-    "event.updated": {
-        eventId: string;
-        ownerEmail: string;
-
-        changes: {
-            name?: {
-                old: string;
-                new: string;
-            };
-
-            date?: {
-                old: string;
-                new: string;
-            };
-
-            price?: {
-                old: number;
-                new: number;
-            };
-
-            totalPeople?: {
-                old: number;
-                new: number;
-            };
-        };
-    };
-
-    "event.deleted": {
+    "event.cancelled": {
         eventId: string;
         name: string;
-        ownerEmail: string;
+        slug: string;
     };
 };
 

@@ -8,9 +8,6 @@ import {
     subscribeShutdown,
 } from "#infrastructure/shared/shutdown.js";
 import { dbConnection } from "#infrastructure/persistence/mongoose-connection.js";
-import { SendEventCreatedEmailUseCase } from "#application/use-cases/send-event-created-email.use-case.js";
-import { SendEventUpdatedEmailUseCase } from "#application/use-cases/send-event-updated-email.use-case.js";
-import { SendEventDeletedEmailUseCase } from "#application/use-cases/send-event-deleted-email.use-case.js";
 import { SmtpEmailSender } from "#infrastructure/email/smtp-email-sender.js";
 import {
     getTransporter,
@@ -26,6 +23,7 @@ import {
 import { MongooseNotificationRepository } from "#infrastructure/persistence/mongoose-notification.repository.js";
 import { PrometheusNotificationMetrics } from "#infrastructure/metrics/prometheus-notification-metrics.js";
 import { OpenTelemetryTracer } from "#infrastructure/traces/otel-tracer.js";
+import { SendEventPublishedEmailUseCase } from "#application/use-cases/send-event-published-email.use-case.js";
 
 class AppServer {
     private static instance: AppServer;
@@ -62,6 +60,7 @@ class AppServer {
                 logger,
                 tracer,
             );
+
             // Initialize use cases
             const templateRenderer = new HandlebarsTemplateRenderer();
 
@@ -70,8 +69,9 @@ class AppServer {
             );
 
             const notificationMetrics = new PrometheusNotificationMetrics();
-            const sendEventCreatedEmailUseCase =
-                new SendEventCreatedEmailUseCase(
+
+            const sendEventPublishedEmailUseCase =
+                new SendEventPublishedEmailUseCase(
                     emailSender,
                     notificationRepository,
                     templateRenderer,
@@ -79,29 +79,10 @@ class AppServer {
                     notificationMetrics,
                 );
 
-            const sendEventUpdatedEmailUseCase =
-                new SendEventUpdatedEmailUseCase(
-                    emailSender,
-                    notificationRepository,
-                    templateRenderer,
-                    logger,
-                    notificationMetrics,
-                );
-
-            const sendEventDeletedEmailUseCase =
-                new SendEventDeletedEmailUseCase(
-                    emailSender,
-                    notificationRepository,
-                    templateRenderer,
-                    logger,
-                    notificationMetrics,
-                );
             // Initialize message broker
             const consumer = new NotificationConsumer(
                 messageBroker,
-                sendEventCreatedEmailUseCase,
-                sendEventUpdatedEmailUseCase,
-                sendEventDeletedEmailUseCase,
+                sendEventPublishedEmailUseCase,
                 logger,
                 notificationMetrics,
                 tracer,

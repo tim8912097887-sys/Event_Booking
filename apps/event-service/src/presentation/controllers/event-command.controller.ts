@@ -39,7 +39,9 @@ export class EventCommandController {
             id: string;
         };
 
-        await this.publishEventUseCase.execute(id);
+        // TODO: Extract email from JWT
+
+        await this.publishEventUseCase.execute(id, "guantingwu647@gmail.com");
 
         return reply.status(204).send();
     };
