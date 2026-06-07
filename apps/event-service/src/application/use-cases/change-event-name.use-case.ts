@@ -1,8 +1,8 @@
 import { EventNotFoundError } from "../errors/event-not-found.error.js";
-import { EventRepository } from "../port/event-repository.js";
+import { EventCommandRepository } from "../port/event-command.repository.js";
 
 export class ChangeEventNameUseCase {
-    constructor(private readonly repository: EventRepository) {}
+    constructor(private readonly repository: EventCommandRepository) {}
 
     async execute(eventId: string, newName: string): Promise<void> {
         const event = await this.repository.findById(eventId);

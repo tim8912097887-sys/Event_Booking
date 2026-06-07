@@ -13,6 +13,7 @@ import { EventName } from "#domain/value-objects/event-name.vo.js";
 import { EventPrice } from "#domain/value-objects/event-price.vo.js";
 import { UserId } from "#domain/value-objects/user-id.vo.js";
 import { IEvent } from "#application/port/i-event.js";
+import { EventSlug } from "#domain/value-objects/event-slug.vo.js";
 
 const EventStatus = {
     PUBLISHED: "PUBLISHED",
@@ -24,6 +25,7 @@ export class Event {
     private constructor(
         private readonly id: EventId,
         private name: EventName,
+        private slug: EventSlug,
         private description: EventDescription,
         private creatorId: UserId,
         private date: EventDate,
@@ -42,11 +44,12 @@ export class Event {
         price,
     }: Omit<
         IEvent & { date: string },
-        "id" | "status" | "createdAt" | "updatedAt" | "deletedAt"
+        "id" | "status" | "createdAt" | "updatedAt" | "deletedAt" | "slug"
     >) {
         return new Event(
             EventId.generate(),
             new EventName(name),
+            EventSlug.generate(name),
             new EventDescription(description),
             new UserId(creatorId),
             EventDate.fromISOString(date),
@@ -60,6 +63,7 @@ export class Event {
     static reconstitute({
         id,
         name,
+        slug,
         description,
         creatorId,
         date,
@@ -71,6 +75,7 @@ export class Event {
         return new Event(
             EventId.from(id),
             new EventName(name),
+            EventSlug.from(slug),
             new EventDescription(description),
             new UserId(creatorId),
             EventDate.fromDate(date),
@@ -132,6 +137,10 @@ export class Event {
         this.status = EventStatus.CANCELLED;
     }
 
+    changeSlug(newSlug: string) {
+        this.slug = EventSlug.from(newSlug);
+    }
+
     getId(): string {
         return this.id.getValue();
     }
@@ -166,6 +175,10 @@ export class Event {
 
     getDeletedAt(): Date | null {
         return this.deletedAt;
+    }
+
+    getSlug(): string {
+        return this.slug.getValue();
     }
 
     private ensureDraft() {

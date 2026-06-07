@@ -11,6 +11,7 @@ export class EventMapper {
         return {
             id: event.getId(),
             name: event.getName(),
+            slug: event.getSlug(),
             description: event.getDescription(),
             creatorId: event.getCreatorId(),
             date: event.getDate(),
@@ -26,6 +27,7 @@ export class EventMapper {
         return Event.reconstitute({
             id: doc.id,
             name: doc.name,
+            slug: doc.slug,
             description: doc.description,
             creatorId: doc.creatorId,
             date: doc.date,

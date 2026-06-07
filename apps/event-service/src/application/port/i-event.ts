@@ -1,6 +1,7 @@
 export interface IEvent {
     id: string;
     name: string;
+    slug: string;
     description: string;
     creatorId: string;
     date: Date;

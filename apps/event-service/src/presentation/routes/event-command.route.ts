@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify";
-import { EventController } from "../controllers/event.controller.js";
+import { EventCommandController } from "../controllers/event-command.controller.js";
 import { CreateEventSchema } from "../schemas/create-event.schema.js";
 import { ChangePriceSchema } from "../schemas/change-price.schema.js";
 import { EventIdSchema } from "../schemas/event-id.schema.js";
@@ -8,9 +8,9 @@ import { ChangeDateSchema } from "../schemas/change-date.schema.js";
 import { ChangeNameSchema } from "../schemas/change-name.schema.js";
 import { ChangeDescriptionSchema } from "../schemas/change-description.schema.js";
 
-export class EventRoute {
+export class EventCommandRoute {
     constructor(
-        private readonly controller: EventController,
+        private readonly controller: EventCommandController,
         private readonly app: FastifyInstance,
     ) {}
 

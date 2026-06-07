@@ -11,7 +11,7 @@ import { successResponse } from "../response/success.js";
 import { ChangeEventNameUseCase } from "#application/use-cases/change-event-name.use-case.js";
 import { ChangeEventDescriptionUseCase } from "#application/use-cases/change-event-description.use-case.js";
 
-export class EventController {
+export class EventCommandController {
     constructor(
         private readonly cancelEventUseCase: CancelEventUseCase,
         private readonly publishEventUseCase: PublishEventUseCase,
