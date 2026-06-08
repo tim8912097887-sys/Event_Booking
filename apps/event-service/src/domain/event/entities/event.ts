@@ -48,9 +48,15 @@ export class Event extends AggregateRoot {
         capacity,
         price,
     }: Omit<
-        IEvent & { date: string },
-        "id" | "status" | "createdAt" | "updatedAt" | "deletedAt" | "slug"
-    >) {
+        IEvent,
+        | "id"
+        | "status"
+        | "createdAt"
+        | "updatedAt"
+        | "deletedAt"
+        | "slug"
+        | "date"
+    > & { date: string }) {
         return new Event(
             EventId.generate(),
             new EventName(name),

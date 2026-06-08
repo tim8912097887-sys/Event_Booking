@@ -58,9 +58,9 @@ export class EventCommandController {
 
     create = async (request: FastifyRequest, reply: FastifyReply) => {
         const input = request.body as Omit<
-            IEvent & { date: string },
-            "id" | "status" | "createdAt" | "updatedAt" | "deletedAt"
-        >;
+            IEvent,
+            "id" | "status" | "createdAt" | "updatedAt" | "deletedAt" | "date"
+        > & { date: string };
 
         const eventId = await this.createEventUseCase.execute(input);
 

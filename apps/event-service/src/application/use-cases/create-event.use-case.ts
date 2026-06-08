@@ -7,9 +7,9 @@ export class CreateEventUseCase {
 
     async execute(
         input: Omit<
-            IEvent & { date: string },
-            "id" | "status" | "createdAt" | "updatedAt" | "deletedAt"
-        >,
+            IEvent,
+            "id" | "status" | "createdAt" | "updatedAt" | "deletedAt" | "date"
+        > & { date: string },
     ): Promise<string> {
         const event = Event.create(input);
         const baseSlug = event.getSlug();

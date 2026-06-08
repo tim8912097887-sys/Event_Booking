@@ -12,7 +12,10 @@
         "lint": "eslint ./src",
         "lint:fix": "eslint ./src --fix",
         "db:generate": "drizzle-kit generate",
-        "db:migrate": "drizzle-kit migrate"
+        "db:migrate": "drizzle-kit migrate",
+        "test": "vitest run",
+        "test:watch": "vitest",
+        "test:coverage": "vitest run --coverage"
     },
     "keywords": [],
     "author": "",
@@ -29,7 +32,10 @@
         "zod": "catalog:"
     },
     "devDependencies": {
+        "vitest": "catalog:",
+        "@vitest/coverage-v8": "catalog:",
         "@types/node": "catalog:",
+        "@faker-js/faker": "catalog:",
         "@types/pg": "catalog:",
         "drizzle-kit": "catalog:",
         "tsx": "catalog:",
