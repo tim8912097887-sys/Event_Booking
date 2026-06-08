@@ -1,0 +1,41 @@
+{
+    "name": "event-service",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "type": "module",
+    "imports": {
+        "#*": "./dist/*"
+    },
+    "scripts": {
+        "build": "tsc -p tsconfig.build.json",
+        "lint": "eslint ./src",
+        "lint:fix": "eslint ./src --fix",
+        "db:generate": "drizzle-kit generate",
+        "db:migrate": "drizzle-kit migrate",
+        "test": "vitest run",
+        "test:watch": "vitest",
+        "test:coverage": "vitest run --coverage"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "packageManager": "pnpm@10.26.1",
+    "dependencies": {
+        "@event-booking/logger": "workspace:*",
+        "@event-booking/message-broker": "workspace:*",
+        "dotenv": "catalog:",
+        "drizzle-orm": "catalog:",
+        "fastify": "catalog:",
+        "fastify-type-provider-zod": "catalog:",
+        "pg": "catalog:",
+        "zod": "catalog:"
+    },
+    "devDependencies": {
+        "@types/node": "catalog:",
+        "@types/pg": "catalog:",
+        "drizzle-kit": "catalog:",
+        "tsx": "catalog:",
+        "typescript": "catalog:"
+    }
+}

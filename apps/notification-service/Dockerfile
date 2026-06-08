@@ -18,6 +18,7 @@ COPY packages/message-broker/package.json ./packages/message-broker/
 
 # service manifests
 COPY apps/notification-service/package.json ./apps/notification-service/
+COPY apps/event-service/package.json ./apps/event-service/
 
 # ==========================================
 # 2. Development & Build Stage

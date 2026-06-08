@@ -1,4 +1,4 @@
-export type TemplateId = "event-created" | "event-updated" | "event-deleted";
+export type TemplateId = "event-published" | "event-cancelled";
 
 export interface RenderedTemplate {
     subject: string;
