@@ -32,10 +32,7 @@
         "zod": "catalog:"
     },
     "devDependencies": {
-        "vitest": "catalog:",
-        "@vitest/coverage-v8": "catalog:",
         "@types/node": "catalog:",
-        "@faker-js/faker": "catalog:",
         "@types/pg": "catalog:",
         "drizzle-kit": "catalog:",
         "tsx": "catalog:",
