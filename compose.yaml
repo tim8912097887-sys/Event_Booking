@@ -26,7 +26,10 @@ services:
         ports:
             - "9090:9090"
         depends_on:
-            - notification-service
+            notification-service:
+                condition: service_healthy
+            event-service:
+                condition: service_healthy
         volumes:
             - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
         networks:
@@ -167,6 +170,10 @@ services:
                 condition: service_healthy
             event-service-migrations:
                 condition: service_completed_successfully
+            kafka-server:
+                condition: service_healthy
+            otel-collector:
+                condition: service_started
         healthcheck:
             test:
                 [
@@ -174,7 +181,7 @@ services:
                     "wget",
                     "--spider",
                     "-q",
-                    "http://localhost:3002/health",
+                    "http://127.0.0.1:3002/health",
                 ]
             interval: 10s
             timeout: 5s

@@ -19,6 +19,7 @@ CREATE TABLE "outbox_events" (
 	"id" uuid PRIMARY KEY NOT NULL,
 	"event_name" varchar(255) NOT NULL,
 	"payload" jsonb NOT NULL,
+	"trace_context" jsonb,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"published_at" timestamp
 );

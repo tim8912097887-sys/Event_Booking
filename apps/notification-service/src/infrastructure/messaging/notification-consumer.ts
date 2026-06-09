@@ -3,6 +3,7 @@ import { NotificationMetrics } from "#application/port/notification-metrics.js";
 import { Tracer } from "#application/port/notification-trace.js";
 import { SendEventPublishedEmailUseCase } from "#application/use-cases/send-event-published-email.use-case.js";
 import { MessageBrokerType, TOPICS } from "@event-booking/message-broker";
+import { context, propagation, ROOT_CONTEXT } from "@opentelemetry/api";
 
 export class NotificationConsumer {
     constructor(
@@ -32,52 +33,62 @@ export class NotificationConsumer {
 
             await consumer.subscribe(
                 TOPICS.EVENT_PUBLISHED,
-                async (payload) => {
-                    await this.tracer.startActiveSpan(
-                        "process_event_published",
-                        async (span) => {
-                            // Process duration metrics
-                            const endProcessing =
-                                this.metrics.processingStarted(
-                                    TOPICS.EVENT_PUBLISHED,
-                                );
-                            // Consume metrics
-                            this.metrics.eventConsumed(TOPICS.EVENT_PUBLISHED);
-                            this.logger.info(
-                                {
-                                    topic: TOPICS.EVENT_PUBLISHED,
-                                    eventId: payload.eventId,
-                                },
-                                "notification.event.received",
-                            );
-                            try {
-                                span.setAttributes({
-                                    "messaging.system": "kafka",
-                                    "messaging.destination":
-                                        TOPICS.EVENT_PUBLISHED,
-                                    "messaging.operation": "process",
-                                    "event.id": payload.eventId,
-                                });
-
-                                await this.publishedUseCase.execute(payload);
-                                // Process count metrics
-                                this.metrics.eventProcessed(
-                                    TOPICS.EVENT_PUBLISHED,
-                                );
-                            } catch (error: any) {
-                                this.logger.error(
-                                    error,
-                                    "notification.event.error",
-                                );
-                                this.metrics.eventFailed(
-                                    TOPICS.EVENT_PUBLISHED,
-                                    error.message,
-                                );
-                            } finally {
-                                endProcessing();
-                            }
-                        },
+                async ({ payload, headers }) => {
+                    const parentContext = propagation.extract(
+                        ROOT_CONTEXT,
+                        headers ?? {},
                     );
+                    await context.with(parentContext, async () => {
+                        await this.tracer.startActiveSpan(
+                            "process_event_published",
+                            async (span) => {
+                                // Process duration metrics
+                                const endProcessing =
+                                    this.metrics.processingStarted(
+                                        TOPICS.EVENT_PUBLISHED,
+                                    );
+                                // Consume metrics
+                                this.metrics.eventConsumed(
+                                    TOPICS.EVENT_PUBLISHED,
+                                );
+                                this.logger.info(
+                                    {
+                                        topic: TOPICS.EVENT_PUBLISHED,
+                                        eventId: payload.eventId,
+                                    },
+                                    "notification.event.received",
+                                );
+                                try {
+                                    span.setAttributes({
+                                        "messaging.system": "kafka",
+                                        "messaging.destination":
+                                            TOPICS.EVENT_PUBLISHED,
+                                        "messaging.operation": "process",
+                                        "event.id": payload.eventId,
+                                    });
+
+                                    await this.publishedUseCase.execute(
+                                        payload,
+                                    );
+                                    // Process count metrics
+                                    this.metrics.eventProcessed(
+                                        TOPICS.EVENT_PUBLISHED,
+                                    );
+                                } catch (error: any) {
+                                    this.logger.error(
+                                        error,
+                                        "notification.event.error",
+                                    );
+                                    this.metrics.eventFailed(
+                                        TOPICS.EVENT_PUBLISHED,
+                                        error.message,
+                                    );
+                                } finally {
+                                    endProcessing();
+                                }
+                            },
+                        );
+                    });
                 },
             );
 

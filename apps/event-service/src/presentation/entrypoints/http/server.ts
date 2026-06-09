@@ -12,6 +12,8 @@ import {
     ZodTypeProvider,
 } from "fastify-type-provider-zod";
 import { EventQueryRoute } from "#presentation/routes/event-query.route.js";
+import { metricsPlugin } from "#presentation/plugins/metric.plugin.js";
+import { register } from "#infrastructure/metrics/prometheus.js";
 
 export async function initializeApp() {
     const app = Fastify({
@@ -21,6 +23,19 @@ export async function initializeApp() {
 
     app.setValidatorCompiler(validatorCompiler);
     app.setSerializerCompiler(serializerCompiler);
+
+    // ======================
+    // Plugins
+    // ======================
+    await metricsPlugin(app);
+
+    // ======================
+    // Metrics endpoint
+    // ======================
+    app.get("/metrics", async (_req, res) => {
+        res.header("content-type", register.contentType);
+        res.send(await register.metrics());
+    });
 
     // ======================
     // Routes
@@ -35,12 +50,6 @@ export async function initializeApp() {
     eventCommandRoute.register();
 
     // ======================
-    // Global handlers
-    // ======================
-    registerNotFoundHandler(app);
-    registerErrorHandler(app);
-
-    // ======================
     // Health
     // ======================
     app.get("/health", async () => ({
@@ -48,6 +57,12 @@ export async function initializeApp() {
         service: "event-service",
         timestamp: new Date().toISOString(),
     }));
+
+    // ======================
+    // Global handlers
+    // ======================
+    registerNotFoundHandler(app);
+    registerErrorHandler(app);
 
     return app.withTypeProvider<ZodTypeProvider>();
 }

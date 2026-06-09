@@ -1,5 +1,5 @@
 {
-  "id": "61e6d5b7-94a1-46ec-a951-80354d3221a7",
+  "id": "fb8e3345-71c5-4ea4-b982-192741f74015",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -179,6 +179,12 @@
           "type": "jsonb",
           "primaryKey": false,
           "notNull": true
+        },
+        "trace_context": {
+          "name": "trace_context",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
         },
         "created_at": {
           "name": "created_at",

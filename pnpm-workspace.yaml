@@ -39,3 +39,4 @@ catalog:
     vitest: ^4.1.7
     "@vitest/coverage-v8": ^4.1.7
     "@faker-js/faker": ^10.4.0
+    "@opentelemetry/instrumentation-pg": ^0.70.0

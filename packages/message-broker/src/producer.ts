@@ -4,6 +4,7 @@ import { EventMap, EventName } from "./events.js";
 type PublishParams<T extends EventName> = {
     topic: T;
     payload: EventMap[T];
+    headers?: Record<string, string>;
 };
 
 export class KafkaProducer {
@@ -17,13 +18,18 @@ export class KafkaProducer {
         await this.producer.disconnect();
     }
 
-    async publish<T extends EventName>({ topic, payload }: PublishParams<T>) {
+    async publish<T extends EventName>({
+        topic,
+        payload,
+        headers,
+    }: PublishParams<T>) {
         await this.producer.send({
             topic,
             messages: [
                 {
                     key: crypto.randomUUID(),
                     value: JSON.stringify(payload),
+                    headers,
                 },
             ],
         });
