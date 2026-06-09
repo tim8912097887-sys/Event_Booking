@@ -1,3 +1,4 @@
+import { PrometheusEventMetrics } from "#infrastructure/metrics/prometheus-event.metric.js";
 import {
     EventQueryRepository,
     EventsQueryFilter,
@@ -5,9 +6,14 @@ import {
 } from "../port/event-query.repository.js";
 
 export class ListEventsQuery {
-    constructor(private readonly repository: EventQueryRepository) {}
+    constructor(
+        private readonly repository: EventQueryRepository,
+        private readonly metrics: PrometheusEventMetrics,
+    ) {}
 
     async execute(filter: EventsQueryFilter): Promise<PagedEventsResult> {
-        return this.repository.findEvents(filter);
+        return this.metrics.trackOperation("list_events", async () => {
+            return this.repository.findEvents(filter);
+        });
     }
 }

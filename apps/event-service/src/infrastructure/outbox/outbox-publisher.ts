@@ -7,6 +7,7 @@ import { EventPublishedDomainEvent } from "#domain/message/event-published-domai
 import { EventCancelledDomainEvent } from "#domain/message/event-cancelled-domain-event.js";
 import { context, propagation, ROOT_CONTEXT } from "@opentelemetry/api";
 import { Tracer } from "#application/port/event-trace.js";
+import { PrometheusEventMetrics } from "../metrics/prometheus-event.metric.js";
 
 export class OutboxPublisher {
     private running = false;
@@ -14,6 +15,7 @@ export class OutboxPublisher {
         private readonly db: NodePgDatabase,
         private readonly producer: KafkaProducer,
         private readonly tracer: Tracer,
+        private readonly metrics: PrometheusEventMetrics,
     ) {}
 
     async start() {
@@ -34,6 +36,8 @@ export class OutboxPublisher {
             .from(outboxEvents)
             .where(isNull(outboxEvents.publishedAt))
             .limit(100);
+        // Report the number of pending messages
+        this.metrics.outboxPendingMessagesTotal(events.length);
 
         for (const event of events) {
             try {
@@ -58,33 +62,40 @@ export class OutboxPublisher {
     }
 
     private async publish(event: typeof outboxEvents.$inferSelect) {
-        await this.tracer.startActiveSpan(
-            "outbox.publish",
+        await this.metrics.trackOutboxMessagePublish(
+            event.eventName,
             async () => {
-                const headers: Record<string, string> = {};
+                await this.tracer.startActiveSpan(
+                    "outbox.publish",
+                    async () => {
+                        const headers: Record<string, string> = {};
 
-                propagation.inject(context.active(), headers);
-                switch (event.eventName) {
-                    case "event.published":
-                        await this.producer.publish({
-                            topic: TOPICS.EVENT_PUBLISHED,
-                            payload: event.payload as EventPublishedDomainEvent,
-                            headers,
-                        });
-                        break;
+                        propagation.inject(context.active(), headers);
+                        switch (event.eventName) {
+                            case "event.published":
+                                await this.producer.publish({
+                                    topic: TOPICS.EVENT_PUBLISHED,
+                                    payload:
+                                        event.payload as EventPublishedDomainEvent,
+                                    headers,
+                                });
+                                break;
 
-                    case "event.cancelled":
-                        await this.producer.publish({
-                            topic: TOPICS.EVENT_CANCELLED,
-                            payload: event.payload as EventCancelledDomainEvent,
-                            headers,
-                        });
-                        break;
-                }
-            },
-            {
-                "outbox.eventId": event.id,
-                "outbox.eventName": event.eventName,
+                            case "event.cancelled":
+                                await this.producer.publish({
+                                    topic: TOPICS.EVENT_CANCELLED,
+                                    payload:
+                                        event.payload as EventCancelledDomainEvent,
+                                    headers,
+                                });
+                                break;
+                        }
+                    },
+                    {
+                        "outbox.eventId": event.id,
+                        "outbox.eventName": event.eventName,
+                    },
+                );
             },
         );
     }

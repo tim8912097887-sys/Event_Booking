@@ -19,10 +19,13 @@ import { OutboxPublisher } from "#infrastructure/outbox/outbox-publisher.js";
 import { EventProducer } from "#infrastructure/messaging/event-producer.js";
 import { subscribeShutdown } from "#infrastructure/shared/shutdown.js";
 import { OpenTelemetryTracer } from "#infrastructure/traces/otel-tracer.js";
+import { PrometheusEventMetrics } from "#infrastructure/metrics/prometheus-event.metric.js";
 
+// Initialize metrics
+export const metric = new PrometheusEventMetrics();
 // Initialize repositories
-const commandRepository = new PostgresEventCommandRepository(db);
-const queryRepository = new PostgresEventQueryRepository(db);
+const commandRepository = new PostgresEventCommandRepository(db, metric);
+const queryRepository = new PostgresEventQueryRepository(db, metric);
 // Initialize tracer
 const tracer = new OpenTelemetryTracer();
 // Initialize producers
@@ -33,22 +36,23 @@ export const publisher = new OutboxPublisher(
     db,
     eventProducer.getProducer(),
     tracer,
+    metric,
 );
 subscribeShutdown(async () => publisher.stop());
 
 export const eventCommandController = new EventCommandController(
-    new CancelEventUseCase(commandRepository, tracer),
-    new PublishEventUseCase(commandRepository, tracer),
-    new DeleteEventUseCase(commandRepository, tracer),
-    new CreateEventUseCase(commandRepository, tracer),
-    new ChangeEventDateUseCase(commandRepository, tracer),
-    new ChangeEventCapacityUseCase(commandRepository, tracer),
-    new ChangeEventPriceUseCase(commandRepository, tracer),
-    new ChangeEventNameUseCase(commandRepository, tracer),
-    new ChangeEventDescriptionUseCase(commandRepository, tracer),
+    new CancelEventUseCase(commandRepository, tracer, metric),
+    new PublishEventUseCase(commandRepository, tracer, metric),
+    new DeleteEventUseCase(commandRepository, tracer, metric),
+    new CreateEventUseCase(commandRepository, tracer, metric),
+    new ChangeEventDateUseCase(commandRepository, tracer, metric),
+    new ChangeEventCapacityUseCase(commandRepository, tracer, metric),
+    new ChangeEventPriceUseCase(commandRepository, tracer, metric),
+    new ChangeEventNameUseCase(commandRepository, tracer, metric),
+    new ChangeEventDescriptionUseCase(commandRepository, tracer, metric),
 );
 
 export const eventQueryController = new EventQueryController(
-    new GetEventBySlugQuery(queryRepository),
-    new ListEventsQuery(queryRepository),
+    new GetEventBySlugQuery(queryRepository, metric),
+    new ListEventsQuery(queryRepository, metric),
 );

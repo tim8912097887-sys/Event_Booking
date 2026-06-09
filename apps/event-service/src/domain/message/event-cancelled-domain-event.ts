@@ -1,3 +1,4 @@
+import { TOPICS } from "@event-booking/message-broker";
 import { DomainEvent } from "./domain-event.js";
 
 export class EventCancelledDomainEvent extends DomainEvent {
@@ -6,6 +7,6 @@ export class EventCancelledDomainEvent extends DomainEvent {
         public readonly name: string,
         public readonly slug: string,
     ) {
-        super("event.cancelled");
+        super(TOPICS.EVENT_CANCELLED);
     }
 }

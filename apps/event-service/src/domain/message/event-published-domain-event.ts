@@ -1,3 +1,4 @@
+import { TOPICS } from "@event-booking/message-broker";
 import { DomainEvent } from "./domain-event.js";
 
 export class EventPublishedDomainEvent extends DomainEvent {
@@ -8,6 +9,6 @@ export class EventPublishedDomainEvent extends DomainEvent {
         public readonly date: string,
         public readonly ownerEmail: string,
     ) {
-        super("event.published");
+        super(TOPICS.EVENT_PUBLISHED);
     }
 }
