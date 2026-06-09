@@ -1,15 +1,28 @@
 import { EventNotFoundError } from "../errors/event-not-found.error.js";
 import { EventCommandRepository } from "../port/event-command.repository.js";
+import { Tracer } from "../port/event-trace.js";
 
 export class ChangeEventPriceUseCase {
-    constructor(private readonly repository: EventCommandRepository) {}
+    constructor(
+        private readonly repository: EventCommandRepository,
+        private readonly tracer: Tracer,
+    ) {}
 
     async execute(eventId: string, newPrice: number): Promise<void> {
-        const event = await this.repository.findById(eventId);
-        if (!event) {
-            throw new EventNotFoundError(eventId);
-        }
-        event.changePrice(newPrice);
-        await this.repository.update(event);
+        await this.tracer.startActiveSpan(
+            "ChangeEventPriceUseCase",
+            async () => {
+                const event = await this.repository.findById(eventId);
+                if (!event) {
+                    throw new EventNotFoundError(eventId);
+                }
+                event.changePrice(newPrice);
+                await this.repository.update(event);
+            },
+            {
+                "event.id": eventId,
+                "event.price.new": newPrice,
+            },
+        );
     }
 }

@@ -21,6 +21,9 @@ catalogs:
     '@opentelemetry/exporter-trace-otlp-http':
       specifier: ^0.218.0
       version: 0.218.0
+    '@opentelemetry/instrumentation-pg':
+      specifier: ^0.70.0
+      version: 0.70.0
     '@opentelemetry/resources':
       specifier: ^2.7.1
       version: 2.7.1
@@ -137,6 +140,27 @@ importers:
       '@event-booking/message-broker':
         specifier: workspace:*
         version: link:../../packages/message-broker
+      '@opentelemetry/api':
+        specifier: 'catalog:'
+        version: 1.9.1
+      '@opentelemetry/auto-instrumentations-node':
+        specifier: 'catalog:'
+        version: 0.76.0(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.7.1(@opentelemetry/api@1.9.1))
+      '@opentelemetry/exporter-trace-otlp-grpc':
+        specifier: 'catalog:'
+        version: 0.218.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/exporter-trace-otlp-http':
+        specifier: 'catalog:'
+        version: 0.218.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/instrumentation-pg':
+        specifier: 'catalog:'
+        version: 0.70.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/resources':
+        specifier: 'catalog:'
+        version: 2.7.1(@opentelemetry/api@1.9.1)
+      '@opentelemetry/sdk-node':
+        specifier: 'catalog:'
+        version: 0.218.0(@opentelemetry/api@1.9.1)
       dotenv:
         specifier: 'catalog:'
         version: 17.4.2
@@ -4367,7 +4391,7 @@ snapshots:
 
   '@types/pg-pool@2.0.7':
     dependencies:
-      '@types/pg': 8.15.6
+      '@types/pg': 8.20.0
 
   '@types/pg@8.15.6':
     dependencies:

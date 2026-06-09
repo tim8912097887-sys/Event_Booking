@@ -5,19 +5,22 @@ import { TOPICS } from "@event-booking/message-broker";
 import { KafkaProducer } from "@event-booking/message-broker/dist/producer.js";
 import { EventPublishedDomainEvent } from "#domain/message/event-published-domain-event.js";
 import { EventCancelledDomainEvent } from "#domain/message/event-cancelled-domain-event.js";
+import { context, propagation, ROOT_CONTEXT } from "@opentelemetry/api";
+import { Tracer } from "#application/port/event-trace.js";
 
 export class OutboxPublisher {
     private running = false;
     constructor(
         private readonly db: NodePgDatabase,
         private readonly producer: KafkaProducer,
+        private readonly tracer: Tracer,
     ) {}
 
     async start() {
         this.running = true;
         while (this.running) {
             await this.publishPendingEvents();
-            await new Promise((resolve) => setTimeout(resolve, 1000));
+            await new Promise((resolve) => setTimeout(resolve, 10000));
         }
     }
 
@@ -34,14 +37,20 @@ export class OutboxPublisher {
 
         for (const event of events) {
             try {
-                await this.publish(event);
+                const parentContext = propagation.extract(
+                    ROOT_CONTEXT,
+                    event.traceContext ?? {},
+                );
+                await context.with(parentContext, async () => {
+                    await this.publish(event);
 
-                await this.db
-                    .update(outboxEvents)
-                    .set({
-                        publishedAt: new Date(),
-                    })
-                    .where(eq(outboxEvents.id, event.id));
+                    await this.db
+                        .update(outboxEvents)
+                        .set({
+                            publishedAt: new Date(),
+                        })
+                        .where(eq(outboxEvents.id, event.id));
+                });
             } catch (error) {
                 console.error(error);
             }
@@ -49,20 +58,34 @@ export class OutboxPublisher {
     }
 
     private async publish(event: typeof outboxEvents.$inferSelect) {
-        switch (event.eventName) {
-            case "event.published":
-                await this.producer.publish({
-                    topic: TOPICS.EVENT_PUBLISHED,
-                    payload: event.payload as EventPublishedDomainEvent,
-                });
-                break;
+        await this.tracer.startActiveSpan(
+            "outbox.publish",
+            async () => {
+                const headers: Record<string, string> = {};
 
-            case "event.cancelled":
-                await this.producer.publish({
-                    topic: TOPICS.EVENT_CANCELLED,
-                    payload: event.payload as EventCancelledDomainEvent,
-                });
-                break;
-        }
+                propagation.inject(context.active(), headers);
+                switch (event.eventName) {
+                    case "event.published":
+                        await this.producer.publish({
+                            topic: TOPICS.EVENT_PUBLISHED,
+                            payload: event.payload as EventPublishedDomainEvent,
+                            headers,
+                        });
+                        break;
+
+                    case "event.cancelled":
+                        await this.producer.publish({
+                            topic: TOPICS.EVENT_CANCELLED,
+                            payload: event.payload as EventCancelledDomainEvent,
+                            headers,
+                        });
+                        break;
+                }
+            },
+            {
+                "outbox.eventId": event.id,
+                "outbox.eventName": event.eventName,
+            },
+        );
     }
 }

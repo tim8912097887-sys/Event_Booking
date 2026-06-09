@@ -167,6 +167,10 @@ services:
                 condition: service_healthy
             event-service-migrations:
                 condition: service_completed_successfully
+            kafka-server:
+                condition: service_healthy
+            otel-collector:
+                condition: service_started
         healthcheck:
             test:
                 [

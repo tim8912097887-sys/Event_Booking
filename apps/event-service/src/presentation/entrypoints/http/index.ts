@@ -1,9 +1,11 @@
+import { stopTelemetry } from "#infrastructure/traces/telemetry.js";
 import type { FastifyInstance } from "fastify";
 
 import { initializeApp } from "./server.js";
 import { env } from "#infrastructure/config/env.js";
 import { logger } from "#infrastructure/logging/logger.js";
 import { publisher } from "#presentation/containers/event.container.js";
+import { subscribeShutdown } from "#infrastructure/shared/shutdown.js";
 
 class AppServer {
     private static instance: AppServer;
@@ -41,6 +43,8 @@ class AppServer {
             });
 
             this.setupProcessHandlers();
+
+            subscribeShutdown(async () => stopTelemetry());
             // Check for pending events constantly
             await publisher.start();
         } catch (error) {

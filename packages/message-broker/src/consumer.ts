@@ -1,11 +1,16 @@
 import { Consumer } from "kafkajs";
 import { EventMap, EventName } from "./events.js";
 
+type Handler<T extends EventName> = ({
+    payload,
+    headers,
+}: {
+    payload: EventMap[T];
+    headers?: Record<string, string>;
+}) => Promise<void>;
+
 export class KafkaConsumer {
-    private handlers = new Map<
-        EventName,
-        (payload: EventMap[EventName]) => Promise<void>
-    >();
+    private handlers = new Map<EventName, Handler<EventName>>();
 
     constructor(private readonly consumer: Consumer) {}
 
@@ -17,10 +22,7 @@ export class KafkaConsumer {
         await this.consumer.disconnect();
     }
 
-    async subscribe<T extends EventName>(
-        topic: T,
-        handler: (payload: EventMap[T]) => Promise<void>,
-    ) {
+    async subscribe<T extends EventName>(topic: T, handler: Handler<T>) {
         await this.consumer.subscribe({
             topic,
             fromBeginning: false,
@@ -39,9 +41,11 @@ export class KafkaConsumer {
                 const MAX_RETRIES = 5;
                 let attempts = 0;
                 const payload = JSON.parse(message.value.toString());
+                const headers =
+                    (message.headers as Record<string, string>) || {};
                 while (attempts < MAX_RETRIES) {
                     try {
-                        await handler(payload);
+                        await handler({ payload, headers });
                         return;
                     } catch (_error) {
                         attempts += 1;

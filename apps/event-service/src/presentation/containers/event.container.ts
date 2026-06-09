@@ -18,27 +18,34 @@ import { ListEventsQuery } from "#application/queries/list-events.query.js";
 import { OutboxPublisher } from "#infrastructure/outbox/outbox-publisher.js";
 import { EventProducer } from "#infrastructure/messaging/event-producer.js";
 import { subscribeShutdown } from "#infrastructure/shared/shutdown.js";
+import { OpenTelemetryTracer } from "#infrastructure/traces/otel-tracer.js";
 
 // Initialize repositories
 const commandRepository = new PostgresEventCommandRepository(db);
 const queryRepository = new PostgresEventQueryRepository(db);
+// Initialize tracer
+const tracer = new OpenTelemetryTracer();
 // Initialize producers
 const eventProducer = new EventProducer(messageBroker);
 await eventProducer.start();
 subscribeShutdown(async () => eventProducer.stop());
-export const publisher = new OutboxPublisher(db, eventProducer.getProducer());
+export const publisher = new OutboxPublisher(
+    db,
+    eventProducer.getProducer(),
+    tracer,
+);
 subscribeShutdown(async () => publisher.stop());
 
 export const eventCommandController = new EventCommandController(
-    new CancelEventUseCase(commandRepository),
-    new PublishEventUseCase(commandRepository),
-    new DeleteEventUseCase(commandRepository),
-    new CreateEventUseCase(commandRepository),
-    new ChangeEventDateUseCase(commandRepository),
-    new ChangeEventCapacityUseCase(commandRepository),
-    new ChangeEventPriceUseCase(commandRepository),
-    new ChangeEventNameUseCase(commandRepository),
-    new ChangeEventDescriptionUseCase(commandRepository),
+    new CancelEventUseCase(commandRepository, tracer),
+    new PublishEventUseCase(commandRepository, tracer),
+    new DeleteEventUseCase(commandRepository, tracer),
+    new CreateEventUseCase(commandRepository, tracer),
+    new ChangeEventDateUseCase(commandRepository, tracer),
+    new ChangeEventCapacityUseCase(commandRepository, tracer),
+    new ChangeEventPriceUseCase(commandRepository, tracer),
+    new ChangeEventNameUseCase(commandRepository, tracer),
+    new ChangeEventDescriptionUseCase(commandRepository, tracer),
 );
 
 export const eventQueryController = new EventQueryController(

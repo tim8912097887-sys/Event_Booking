@@ -6,6 +6,7 @@ import { Event } from "#domain/event/entities/event.js";
 import { EventMapper } from "./event-mapper.js";
 import { eq } from "drizzle-orm";
 import { outboxEvents } from "./schema/outbox-event.js";
+import { context, propagation } from "@opentelemetry/api";
 
 export class PostgresEventCommandRepository implements EventCommandRepository {
     constructor(private readonly db: NodePgDatabase) {}
@@ -51,12 +52,17 @@ export class PostgresEventCommandRepository implements EventCommandRepository {
                 .execute();
             const domainEvents = event.getDomainEvents();
             for (const domainEvent of domainEvents) {
+                // Inject trace context for outbox
+                const carrier: Record<string, string> = {};
+
+                propagation.inject(context.active(), carrier);
                 await trx
                     .insert(outboxEvents)
                     .values({
                         id: crypto.randomUUID(),
                         eventName: domainEvent.eventName,
                         payload: domainEvent,
+                        traceContext: carrier,
                     })
                     .execute();
             }
