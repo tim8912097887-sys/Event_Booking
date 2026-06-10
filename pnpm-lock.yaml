@@ -132,6 +132,12 @@ importers:
         specifier: ^4.1.7
         version: 4.1.8(@opentelemetry/api@1.9.1)(@types/node@25.9.2)(@vitest/coverage-v8@4.1.8)(vite@8.0.16(@types/node@25.9.2)(esbuild@0.28.0)(tsx@4.22.4)(yaml@2.9.0))
 
+  apps/booking-service:
+    dependencies:
+      zod:
+        specifier: 'catalog:'
+        version: 4.4.3
+
   apps/event-service:
     dependencies:
       '@event-booking/logger':
