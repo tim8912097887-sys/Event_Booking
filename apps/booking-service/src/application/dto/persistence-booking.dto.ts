@@ -15,4 +15,6 @@ export interface BookingRecord {
     status: BookingStatus;
     amount: number;
     currency: string;
+    createdAt: Date;
+    updatedAt: Date | null;
 }

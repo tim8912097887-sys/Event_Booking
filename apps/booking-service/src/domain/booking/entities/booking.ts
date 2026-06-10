@@ -8,13 +8,27 @@ import {
     BookingRecord,
     BookingStatus,
 } from "#application/dto/persistence-booking.dto";
+import { InvalidTransactionError } from "#domain/errors/booking.error";
+
+const allowedTransitions: Record<BookingStatus, BookingStatus[]> = {
+    PENDING_PAYMENT: [
+        BOOKING_STATUS.CONFIRMED,
+        BOOKING_STATUS.PAYMENT_FAILED,
+        BOOKING_STATUS.CANCELLED,
+    ],
+    CONFIRMED: [
+        BOOKING_STATUS.CANCELLED, // maybe refund
+    ],
+    PAYMENT_FAILED: [BOOKING_STATUS.CANCELLED],
+    CANCELLED: [],
+};
 
 export class Booking {
     constructor(
         public readonly id: BookingId,
         public readonly eventId: EventId,
         public readonly userId: UserId,
-        public readonly status: BookingStatus,
+        public status: BookingStatus,
         public readonly totalAmount: Money,
     ) {}
 
@@ -40,7 +54,7 @@ export class Booking {
         status,
         amount,
         currency,
-    }: BookingRecord): Booking {
+    }: Omit<BookingRecord, "createdAt" | "updatedAt">): Booking {
         return new Booking(
             BookingId.from(id),
             new EventId(eventId),
@@ -48,6 +62,18 @@ export class Booking {
             status,
             new Money(amount, currency),
         );
+    }
+
+    cancel(): void {
+        this.transition(BOOKING_STATUS.CANCELLED);
+    }
+
+    confirm(): void {
+        this.transition(BOOKING_STATUS.CONFIRMED);
+    }
+
+    paymentFail(): void {
+        this.transition(BOOKING_STATUS.PAYMENT_FAILED);
     }
 
     getBookingId(): string {
@@ -62,15 +88,18 @@ export class Booking {
         return this.userId.getValue();
     }
 
-    getStatus(): string {
+    getStatus(): BookingStatus {
         return this.status;
     }
 
-    getAmount(): number {
-        return this.totalAmount.amount;
+    getTotalAmount(): Money {
+        return this.totalAmount;
     }
 
-    getCurrency(): string {
-        return this.totalAmount.currency;
+    private transition(to: BookingStatus) {
+        if (!allowedTransitions[this.status].includes(to)) {
+            throw new InvalidTransactionError(this.status, to);
+        }
+        this.status = to;
     }
 }
