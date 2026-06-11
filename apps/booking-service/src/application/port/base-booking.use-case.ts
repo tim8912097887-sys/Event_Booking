@@ -1,5 +1,5 @@
-import { BookingNotFoundError } from "#application/errors/booking-not-found";
-import { BookingRepository } from "./booking.repository";
+import { BookingNotFoundError } from "#application/errors/booking-not-found.js";
+import { BookingRepository } from "./booking.repository.js";
 
 export abstract class BookingUseCaseBase {
     constructor(protected readonly repository: BookingRepository) {}

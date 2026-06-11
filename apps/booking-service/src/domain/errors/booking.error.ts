@@ -1,4 +1,4 @@
-import { DomainError } from "./domain.error";
+import { DomainError } from "./domain.error.js";
 
 export class InvalidTransactionError extends DomainError {
     constructor(from: string, to: string) {

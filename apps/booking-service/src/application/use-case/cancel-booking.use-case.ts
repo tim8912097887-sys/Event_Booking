@@ -1,4 +1,4 @@
-import { BookingUseCaseBase } from "#application/port/base-booking.use-case";
+import { BookingUseCaseBase } from "#application/port/base-booking.use-case.js";
 
 export class CancelBookingUseCase extends BookingUseCaseBase {
     async execute(id: string): Promise<void> {

@@ -1,8 +1,8 @@
-import { BookingRecord } from "#application/dto/persistence-booking.dto";
-import { BookingRepository } from "#application/port/booking.repository";
-import { Booking } from "#domain/booking/entities/booking";
-import { PrismaClient } from "#generated/prisma/client";
-import { BookingMapper } from "./booking-mapper";
+import { BookingRecord } from "#application/dto/persistence-booking.dto.js";
+import { BookingRepository } from "#application/port/booking.repository.js";
+import { Booking } from "#domain/booking/entities/booking.js";
+import { PrismaClient } from "#generated/prisma/client.js";
+import { BookingMapper } from "./booking-mapper.js";
 
 export class PrismaBookingRepository implements BookingRepository {
     constructor(private readonly db: PrismaClient) {}

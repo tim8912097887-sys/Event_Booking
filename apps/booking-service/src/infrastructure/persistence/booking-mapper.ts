@@ -1,5 +1,5 @@
-import { BookingRecord } from "#application/dto/persistence-booking.dto";
-import { Booking } from "#domain/booking/entities/booking";
+import { BookingRecord } from "#application/dto/persistence-booking.dto.js";
+import { Booking } from "#domain/booking/entities/booking.js";
 
 export class BookingMapper {
     public static toPersistence(

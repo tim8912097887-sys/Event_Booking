@@ -1,6 +1,6 @@
-import { CreateBooking } from "#application/dto/create-booking.dto";
-import { BookingRepository } from "#application/port/booking.repository";
-import { Booking } from "#domain/booking/entities/booking";
+import { CreateBooking } from "#application/dto/create-booking.dto.js";
+import { BookingRepository } from "#application/port/booking.repository.js";
+import { Booking } from "#domain/booking/entities/booking.js";
 
 export class CreateBookingUseCase {
     constructor(private readonly repository: BookingRepository) {}

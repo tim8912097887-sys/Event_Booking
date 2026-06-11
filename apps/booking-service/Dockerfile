@@ -32,12 +32,12 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 # Copy the rest of the source code (Ensure .dockerignore ignores local node_modules!)
 COPY . .
 
-# Build everything (Your workspace build command should build logger then event-service)
-RUN pnpm --filter=event-service... build
+# Build everything (Your workspace build command should build logger then booking-service)
+RUN pnpm --filter=booking-service... build
 
-# Isolate the event-service and its production dependencies into a standalone folder
-# This eliminates workspace symlinks and flattens everything into /prod/event-service
-RUN pnpm --filter=event-service deploy --legacy /prod/event-service
+# Isolate the booking-service and its production dependencies into a standalone folder
+# This eliminates workspace symlinks and flattens everything into /prod/booking-service
+RUN pnpm --filter=booking-service deploy --legacy /prod/booking-service
 
 # ==========================================
 # 3. Final Lean Production Stage
@@ -50,10 +50,11 @@ USER node
 
 # Copy the isolated self-contained application from the builder stage
 # This includes the exact production node_modules and the compiled shared logger!
-COPY --from=builder --chown=node:node /prod/event-service ./
-COPY --chown=node:node apps/event-service/drizzle ./drizzle
+COPY --from=builder --chown=node:node /prod/booking-service ./
+COPY --chown=node:node apps/booking-service/prisma ./prisma
 
-EXPOSE 3002
+
+EXPOSE 3003
 
 # Double check your entrypoint path inside the build artifact folder
 CMD ["node", "dist/presentation/entrypoints/http/index.js"]

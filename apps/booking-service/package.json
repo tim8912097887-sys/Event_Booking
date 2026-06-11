@@ -3,6 +3,10 @@
     "version": "1.0.0",
     "description": "",
     "main": "index.js",
+    "type": "module",
+    "imports": {
+        "#*": "./dist/*"
+    },
     "scripts": {
         "build": "tsc -p tsconfig.build.json",
         "lint": "eslint ./src",
@@ -17,10 +21,17 @@
         "@prisma/client": "catalog:",
         "pg": "catalog:",
         "dotenv": "catalog:",
-        "zod": "catalog:"
+        "zod": "catalog:",
+        "fastify": "catalog:",
+        "fastify-type-provider-zod": "catalog:",
+        "@event-booking/logger": "workspace:*",
+        "@event-booking/message-broker": "workspace:*",
+        "prisma": "catalog:"
     },
     "devDependencies": {
-        "prisma": "catalog:",
-        "@types/pg": "catalog:"
+        "@types/pg": "catalog:",
+        "@types/node": "catalog:",
+        "tsx": "catalog:",
+        "typescript": "catalog:"
     }
 }

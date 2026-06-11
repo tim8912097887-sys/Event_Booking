@@ -1,14 +1,14 @@
-import { BookingId } from "#domain/value-objects/booking-id.vo";
-import { EventId } from "#domain/value-objects/event-id.vo";
-import { UserId } from "#domain/value-objects/user-id.vo";
-import { Money } from "#domain/value-objects/money.vo";
-import { CreateBooking } from "#application/dto/create-booking.dto";
+import { BookingId } from "#domain/value-objects/booking-id.vo.js";
+import { EventId } from "#domain/value-objects/event-id.vo.js";
+import { UserId } from "#domain/value-objects/user-id.vo.js";
+import { Money } from "#domain/value-objects/money.vo.js";
+import { CreateBooking } from "#application/dto/create-booking.dto.js";
 import {
     BOOKING_STATUS,
     BookingRecord,
     BookingStatus,
-} from "#application/dto/persistence-booking.dto";
-import { InvalidTransactionError } from "#domain/errors/booking.error";
+} from "#application/dto/persistence-booking.dto.js";
+import { InvalidTransactionError } from "#domain/errors/booking.error.js";
 
 const allowedTransitions: Record<BookingStatus, BookingStatus[]> = {
     PENDING_PAYMENT: [

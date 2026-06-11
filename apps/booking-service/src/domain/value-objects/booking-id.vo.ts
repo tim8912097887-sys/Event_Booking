@@ -1,4 +1,4 @@
-import { InvalidBookingIdError } from "#domain/errors/booking-id.error";
+import { InvalidBookingIdError } from "#domain/errors/booking-id.error.js";
 import crypto from "crypto";
 import z from "zod";
 

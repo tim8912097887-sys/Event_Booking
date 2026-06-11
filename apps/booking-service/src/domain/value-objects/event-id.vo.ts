@@ -8,7 +8,6 @@ export class EventId {
         if (!result.success) {
             throw new InvalidEventIdError();
         }
-        return new EventId(value);
     }
 
     getValue() {
