@@ -3,6 +3,11 @@ import type { FastifyInstance } from "fastify";
 import { initializeApp } from "./server.js";
 import { env } from "#infrastructure/config/env.js";
 import { logger } from "#infrastructure/logging/logger.js";
+import {
+    shutdown,
+    subscribeShutdown,
+} from "#src/infrastructure/shared/shutdown.js";
+import { prisma } from "#src/infrastructure/persistence/postgres-connection.js";
 
 class AppServer {
     private static instance: AppServer;
@@ -27,6 +32,9 @@ class AppServer {
 
     public async start(): Promise<void> {
         try {
+            // Subscribe db to shutdown
+            subscribeShutdown(async () => await prisma.$disconnect());
+
             this.app = await initializeApp();
             await this.app.listen({
                 port: env.PORT,
@@ -104,6 +112,8 @@ class AppServer {
             if (this.app) {
                 await this.app.close();
             }
+
+            await shutdown();
 
             clearTimeout(forceExit);
 
