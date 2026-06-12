@@ -39,8 +39,6 @@ export class EventMapper {
             price: doc.price,
             status: doc.status,
             deletedAt: doc.deletedAt,
-            createdAt: doc.createdAt,
-            updatedAt: doc.updatedAt,
         });
     }
 }
