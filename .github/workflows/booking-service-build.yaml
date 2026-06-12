@@ -1,4 +1,4 @@
-name: CI-event-service-Test
+name: CI-booking-service-Build
 on:
     push:
         branches:
@@ -7,8 +7,8 @@ on:
             - feat/**
             - fix/**
         paths:
-            - "apps/event-service/**"
-            - ".github/workflows/event-service-test.yaml"
+            - "apps/booking-service/**"
+            - ".github/workflows/booking-service-build.yaml"
             - "packages/**"
     pull_request:
         branches:
@@ -19,13 +19,9 @@ permissions:
 concurrency:
     group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.ref }}
     cancel-in-progress: ${{ github.event_name == 'pull_request' || github.ref != 'refs/heads/main' }}
-
 jobs:
-    event_service-test:
+    booking-service-build:
         runs-on: ubuntu-latest
-        strategy:
-            matrix:
-                node-version: [20, 22]
         steps:
             - name: Checkout
               uses: actions/checkout@v4
@@ -40,5 +36,5 @@ jobs:
             # Build shared message broker
             - name: Build Shared Message Broker
               run: pnpm --filter @event-booking/message-broker run build
-            - name: Run tests
-              run: pnpm run --filter ./apps/event-service test
+            - name: Run build
+              run: pnpm --filter ./apps/booking-service run build

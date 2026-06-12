@@ -1,4 +1,4 @@
-name: CI-event-service-Test
+name: CI-booking-service-Test
 on:
     push:
         branches:
@@ -7,8 +7,8 @@ on:
             - feat/**
             - fix/**
         paths:
-            - "apps/event-service/**"
-            - ".github/workflows/event-service-test.yaml"
+            - "apps/booking-service/**"
+            - ".github/workflows/booking-service-test.yaml"
             - "packages/**"
     pull_request:
         branches:
@@ -41,4 +41,4 @@ jobs:
             - name: Build Shared Message Broker
               run: pnpm --filter @event-booking/message-broker run build
             - name: Run tests
-              run: pnpm run --filter ./apps/event-service test
+              run: pnpm run --filter ./apps/booking-service test
