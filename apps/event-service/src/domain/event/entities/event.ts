@@ -83,7 +83,7 @@ export class Event extends AggregateRoot {
         price,
         status,
         deletedAt,
-    }: IEvent) {
+    }: Omit<IEvent, "createdAt" | "updatedAt">) {
         return new Event(
             EventId.from(id),
             new EventName(name),
