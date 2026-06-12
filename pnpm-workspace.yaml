@@ -43,3 +43,4 @@ catalog:
     "@prisma/adapter-pg": ^7.8.0
     "@prisma/client": ^7.8.0
     prisma: ^7.8.0
+    axios: ^1.17.0

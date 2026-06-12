@@ -4,7 +4,7 @@ import { NodePgDatabase } from "drizzle-orm/node-postgres";
 import { events } from "./schema/event.js";
 import { Event } from "#domain/event/entities/event.js";
 import { EventMapper } from "./event-mapper.js";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { outboxEvents } from "./schema/outbox-event.js";
 import { context, propagation } from "@opentelemetry/api";
 import { PrometheusEventMetrics } from "../metrics/prometheus-event.metric.js";
@@ -49,6 +49,24 @@ export class PostgresEventCommandRepository implements EventCommandRepository {
                 ...result[0],
                 price: parseFloat(result[0].price),
             });
+        });
+    }
+
+    async updateReservedSeats(event: Event): Promise<number> {
+        return this.metrics.trackDbQuery("updateReservedSeats", async () => {
+            const eventData = EventMapper.toPersistence(event);
+            const result = await this.db
+                .update(events)
+                .set(eventData)
+                .where(
+                    and(
+                        eq(events.id, event.getId()),
+                        eq(events.version, event.getVersion() - 1),
+                    ),
+                )
+                .execute();
+            const updated = result.rowCount ?? 0;
+            return updated;
         });
     }
 

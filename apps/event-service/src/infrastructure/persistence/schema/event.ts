@@ -42,6 +42,10 @@ export const events = pgTable(
 
         capacity: integer("capacity").notNull(),
 
+        reservedSeats: integer("reserved_seats").notNull().default(0),
+
+        version: integer("version").notNull().default(1),
+
         status: eventStatusEnum("status").notNull().default("DRAFT"),
 
         slug: varchar("slug", { length: 255 }).notNull().unique(),

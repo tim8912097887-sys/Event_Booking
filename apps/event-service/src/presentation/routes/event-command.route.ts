@@ -7,6 +7,7 @@ import { ChangeCapacitySchema } from "../schemas/change-capacity.schema.js";
 import { ChangeDateSchema } from "../schemas/change-date.schema.js";
 import { ChangeNameSchema } from "../schemas/change-name.schema.js";
 import { ChangeDescriptionSchema } from "../schemas/change-description.schema.js";
+import { RequestedSeatSchema } from "../schemas/requested-seat.schema.js";
 
 export class EventCommandRoute {
     constructor(
@@ -100,6 +101,26 @@ export class EventCommandRoute {
                 },
             },
             this.controller.delete,
+        );
+        this.app.post(
+            "/events/:id/reserve",
+            {
+                schema: {
+                    body: RequestedSeatSchema,
+                    params: EventIdSchema,
+                },
+            },
+            this.controller.reserve,
+        );
+        this.app.post(
+            "/events/:id/release",
+            {
+                schema: {
+                    body: RequestedSeatSchema,
+                    params: EventIdSchema,
+                },
+            },
+            this.controller.release,
         );
     }
 }

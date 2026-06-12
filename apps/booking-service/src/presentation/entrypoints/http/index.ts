@@ -6,8 +6,8 @@ import { logger } from "#infrastructure/logging/logger.js";
 import {
     shutdown,
     subscribeShutdown,
-} from "#src/infrastructure/shared/shutdown.js";
-import { prisma } from "#src/infrastructure/persistence/postgres-connection.js";
+} from "#infrastructure/shared/shutdown.js";
+import { prisma } from "#infrastructure/persistence/postgres-connection.js";
 
 class AppServer {
     private static instance: AppServer;

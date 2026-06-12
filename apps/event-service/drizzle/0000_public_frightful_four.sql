@@ -7,6 +7,8 @@ CREATE TABLE "events" (
 	"date" timestamp with time zone NOT NULL,
 	"price" numeric(10, 2) NOT NULL,
 	"capacity" integer NOT NULL,
+	"reserved_seats" integer DEFAULT 0 NOT NULL,
+	"version" integer DEFAULT 1 NOT NULL,
 	"status" "event_status" DEFAULT 'DRAFT' NOT NULL,
 	"slug" varchar(255) NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,

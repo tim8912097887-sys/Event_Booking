@@ -3,6 +3,7 @@ import {
     EventAlreadyDeletedError,
     EventDeletedModificationError,
     EventNotDraftError,
+    EventNotPublishedError,
     PublishedEventDeletionError,
 } from "#domain/errors/entity.error.js";
 import { EventCapacity } from "#domain/value-objects/event-capacity.vo.js";
@@ -17,6 +18,9 @@ import { EventSlug } from "#domain/value-objects/event-slug.vo.js";
 import { AggregateRoot } from "../aggregate-root.js";
 import { EventPublishedDomainEvent } from "#domain/message/event-published-domain-event.js";
 import { EventCancelledDomainEvent } from "#domain/message/event-cancelled-domain-event.js";
+import { CreateEventDto } from "#application/dto/create-event.dto.js";
+import { InsufficientReservedSeatsError } from "#domain/errors/insufficient-reserved-seats.error.js";
+import { CapacityExceededError } from "#domain/errors/capacity-exceeded.error.js";
 
 const EventStatus = {
     PUBLISHED: "PUBLISHED",
@@ -33,6 +37,8 @@ export class Event extends AggregateRoot {
         private creatorId: UserId,
         private date: EventDate,
         private capacity: EventCapacity,
+        private reservedSeats: number,
+        private version: number,
         private price: EventPrice,
         private status: (typeof EventStatus)[keyof typeof EventStatus],
         private deletedAt: Date | null,
@@ -47,16 +53,7 @@ export class Event extends AggregateRoot {
         date,
         capacity,
         price,
-    }: Omit<
-        IEvent,
-        | "id"
-        | "status"
-        | "createdAt"
-        | "updatedAt"
-        | "deletedAt"
-        | "slug"
-        | "date"
-    > & { date: string }) {
+    }: CreateEventDto) {
         return new Event(
             EventId.generate(),
             new EventName(name),
@@ -65,6 +62,8 @@ export class Event extends AggregateRoot {
             new UserId(creatorId),
             EventDate.fromISOString(date),
             new EventCapacity(capacity),
+            0,
+            1,
             new EventPrice(price),
             EventStatus.DRAFT,
             null,
@@ -79,6 +78,8 @@ export class Event extends AggregateRoot {
         creatorId,
         date,
         capacity,
+        reservedSeats,
+        version,
         price,
         status,
         deletedAt,
@@ -91,10 +92,43 @@ export class Event extends AggregateRoot {
             new UserId(creatorId),
             EventDate.fromDate(date),
             new EventCapacity(capacity),
+            reservedSeats,
+            version,
             new EventPrice(price),
             status,
             deletedAt,
         );
+    }
+
+    releaseSeat(requestedSeats: number) {
+        if (this.status !== EventStatus.PUBLISHED) {
+            throw new EventNotPublishedError();
+        }
+        if (this.deletedAt !== null) {
+            throw new EventAlreadyDeletedError();
+        }
+        if (
+            this.reservedSeats === 0 ||
+            this.reservedSeats - requestedSeats < 0
+        ) {
+            throw new InsufficientReservedSeatsError();
+        }
+        this.reservedSeats -= requestedSeats;
+        this.version += 1;
+    }
+
+    reserveSeat(requestedSeats: number) {
+        if (this.status !== EventStatus.PUBLISHED) {
+            throw new EventNotPublishedError();
+        }
+        if (this.deletedAt !== null) {
+            throw new EventAlreadyDeletedError();
+        }
+        if (this.reservedSeats + requestedSeats > this.capacity.getValue()) {
+            throw new CapacityExceededError();
+        }
+        this.reservedSeats += requestedSeats;
+        this.version += 1;
     }
 
     changeName(newName: string) {
@@ -206,6 +240,14 @@ export class Event extends AggregateRoot {
 
     getSlug(): string {
         return this.slug.getValue();
+    }
+
+    getReservedSeats(): number {
+        return this.reservedSeats;
+    }
+
+    getVersion(): number {
+        return this.version;
     }
 
     private ensureDraft() {

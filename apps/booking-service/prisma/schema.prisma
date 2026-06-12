@@ -26,6 +26,8 @@ model Booking {
 
   status       BookingStatus
 
+  seats        Int
+
   amount       Int           // or Decimal if you need cents precision
   currency     String        // ISO currency code, e.g. "USD", "TWD"
 

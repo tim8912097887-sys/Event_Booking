@@ -23,11 +23,11 @@ export class BookingController {
     create = async (request: FastifyRequest, reply: FastifyReply) => {
         const input = request.body as CreateBooking;
 
-        const eventId = await this.createBookingUseCase.execute(input);
+        const bookingId = await this.createBookingUseCase.execute(input);
 
         return reply.status(201).send(
             successResponse({
-                eventId,
+                bookingId,
             }),
         );
     };

@@ -26,6 +26,7 @@ const EnvSchema = z.object({
             /^postgresql:\/\/(?:([^:\s]+):([^@\s]+)@)?([^:/\s]+)(?::(\d+))?\/([^\s?]+)(?:\?(.+))?$/,
             "Database URL is invalid",
         ),
+    EVENT_SERVICE_URL: z.string().nonempty("Event service url is required"),
 });
 
 const result = EnvSchema.safeParse(process.env);

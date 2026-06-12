@@ -9,7 +9,7 @@ import {
     shutdown,
     subscribeShutdown,
 } from "#infrastructure/shared/shutdown.js";
-import { dbServer } from "#src/infrastructure/persistence/postgres-connection.js";
+import { dbServer } from "#infrastructure/persistence/postgres-connection.js";
 
 class AppServer {
     private static instance: AppServer;

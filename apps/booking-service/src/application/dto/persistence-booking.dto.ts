@@ -12,6 +12,7 @@ export interface BookingRecord {
     id: string;
     eventId: string;
     userId: string;
+    seats: number;
     status: BookingStatus;
     amount: number;
     currency: string;

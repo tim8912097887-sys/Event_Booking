@@ -6,6 +6,8 @@ export interface IEvent {
     creatorId: string;
     date: Date;
     capacity: number;
+    reservedSeats: number;
+    version: number;
     price: number;
     status: "DRAFT" | "PUBLISHED" | "CANCELLED";
     createdAt: Date;

@@ -75,6 +75,7 @@ export const BookingScalarFieldEnum = {
   eventId: 'eventId',
   userId: 'userId',
   status: 'status',
+  seats: 'seats',
   amount: 'amount',
   currency: 'currency',
   createdAt: 'createdAt',

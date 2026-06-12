@@ -27,10 +27,12 @@ export type AggregateBooking = {
 }
 
 export type BookingAvgAggregateOutputType = {
+  seats: number | null
   amount: number | null
 }
 
 export type BookingSumAggregateOutputType = {
+  seats: number | null
   amount: number | null
 }
 
@@ -39,6 +41,7 @@ export type BookingMinAggregateOutputType = {
   eventId: string | null
   userId: string | null
   status: $Enums.BookingStatus | null
+  seats: number | null
   amount: number | null
   currency: string | null
   createdAt: Date | null
@@ -50,6 +53,7 @@ export type BookingMaxAggregateOutputType = {
   eventId: string | null
   userId: string | null
   status: $Enums.BookingStatus | null
+  seats: number | null
   amount: number | null
   currency: string | null
   createdAt: Date | null
@@ -61,6 +65,7 @@ export type BookingCountAggregateOutputType = {
   eventId: number
   userId: number
   status: number
+  seats: number
   amount: number
   currency: number
   createdAt: number
@@ -70,10 +75,12 @@ export type BookingCountAggregateOutputType = {
 
 
 export type BookingAvgAggregateInputType = {
+  seats?: true
   amount?: true
 }
 
 export type BookingSumAggregateInputType = {
+  seats?: true
   amount?: true
 }
 
@@ -82,6 +89,7 @@ export type BookingMinAggregateInputType = {
   eventId?: true
   userId?: true
   status?: true
+  seats?: true
   amount?: true
   currency?: true
   createdAt?: true
@@ -93,6 +101,7 @@ export type BookingMaxAggregateInputType = {
   eventId?: true
   userId?: true
   status?: true
+  seats?: true
   amount?: true
   currency?: true
   createdAt?: true
@@ -104,6 +113,7 @@ export type BookingCountAggregateInputType = {
   eventId?: true
   userId?: true
   status?: true
+  seats?: true
   amount?: true
   currency?: true
   createdAt?: true
@@ -202,6 +212,7 @@ export type BookingGroupByOutputType = {
   eventId: string
   userId: string
   status: $Enums.BookingStatus
+  seats: number
   amount: number
   currency: string
   createdAt: Date
@@ -236,6 +247,7 @@ export type BookingWhereInput = {
   eventId?: Prisma.StringFilter<"Booking"> | string
   userId?: Prisma.StringFilter<"Booking"> | string
   status?: Prisma.EnumBookingStatusFilter<"Booking"> | $Enums.BookingStatus
+  seats?: Prisma.IntFilter<"Booking"> | number
   amount?: Prisma.IntFilter<"Booking"> | number
   currency?: Prisma.StringFilter<"Booking"> | string
   createdAt?: Prisma.DateTimeFilter<"Booking"> | Date | string
@@ -247,6 +259,7 @@ export type BookingOrderByWithRelationInput = {
   eventId?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   status?: Prisma.SortOrder
+  seats?: Prisma.SortOrder
   amount?: Prisma.SortOrder
   currency?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -261,6 +274,7 @@ export type BookingWhereUniqueInput = Prisma.AtLeast<{
   eventId?: Prisma.StringFilter<"Booking"> | string
   userId?: Prisma.StringFilter<"Booking"> | string
   status?: Prisma.EnumBookingStatusFilter<"Booking"> | $Enums.BookingStatus
+  seats?: Prisma.IntFilter<"Booking"> | number
   amount?: Prisma.IntFilter<"Booking"> | number
   currency?: Prisma.StringFilter<"Booking"> | string
   createdAt?: Prisma.DateTimeFilter<"Booking"> | Date | string
@@ -272,6 +286,7 @@ export type BookingOrderByWithAggregationInput = {
   eventId?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   status?: Prisma.SortOrder
+  seats?: Prisma.SortOrder
   amount?: Prisma.SortOrder
   currency?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -291,6 +306,7 @@ export type BookingScalarWhereWithAggregatesInput = {
   eventId?: Prisma.StringWithAggregatesFilter<"Booking"> | string
   userId?: Prisma.StringWithAggregatesFilter<"Booking"> | string
   status?: Prisma.EnumBookingStatusWithAggregatesFilter<"Booking"> | $Enums.BookingStatus
+  seats?: Prisma.IntWithAggregatesFilter<"Booking"> | number
   amount?: Prisma.IntWithAggregatesFilter<"Booking"> | number
   currency?: Prisma.StringWithAggregatesFilter<"Booking"> | string
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Booking"> | Date | string
@@ -302,6 +318,7 @@ export type BookingCreateInput = {
   eventId: string
   userId: string
   status: $Enums.BookingStatus
+  seats: number
   amount: number
   currency: string
   createdAt?: Date | string
@@ -313,6 +330,7 @@ export type BookingUncheckedCreateInput = {
   eventId: string
   userId: string
   status: $Enums.BookingStatus
+  seats: number
   amount: number
   currency: string
   createdAt?: Date | string
@@ -324,6 +342,7 @@ export type BookingUpdateInput = {
   eventId?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumBookingStatusFieldUpdateOperationsInput | $Enums.BookingStatus
+  seats?: Prisma.IntFieldUpdateOperationsInput | number
   amount?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -335,6 +354,7 @@ export type BookingUncheckedUpdateInput = {
   eventId?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumBookingStatusFieldUpdateOperationsInput | $Enums.BookingStatus
+  seats?: Prisma.IntFieldUpdateOperationsInput | number
   amount?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -346,6 +366,7 @@ export type BookingCreateManyInput = {
   eventId: string
   userId: string
   status: $Enums.BookingStatus
+  seats: number
   amount: number
   currency: string
   createdAt?: Date | string
@@ -357,6 +378,7 @@ export type BookingUpdateManyMutationInput = {
   eventId?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumBookingStatusFieldUpdateOperationsInput | $Enums.BookingStatus
+  seats?: Prisma.IntFieldUpdateOperationsInput | number
   amount?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -368,6 +390,7 @@ export type BookingUncheckedUpdateManyInput = {
   eventId?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumBookingStatusFieldUpdateOperationsInput | $Enums.BookingStatus
+  seats?: Prisma.IntFieldUpdateOperationsInput | number
   amount?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -379,6 +402,7 @@ export type BookingCountOrderByAggregateInput = {
   eventId?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   status?: Prisma.SortOrder
+  seats?: Prisma.SortOrder
   amount?: Prisma.SortOrder
   currency?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -386,6 +410,7 @@ export type BookingCountOrderByAggregateInput = {
 }
 
 export type BookingAvgOrderByAggregateInput = {
+  seats?: Prisma.SortOrder
   amount?: Prisma.SortOrder
 }
 
@@ -394,6 +419,7 @@ export type BookingMaxOrderByAggregateInput = {
   eventId?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   status?: Prisma.SortOrder
+  seats?: Prisma.SortOrder
   amount?: Prisma.SortOrder
   currency?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -405,6 +431,7 @@ export type BookingMinOrderByAggregateInput = {
   eventId?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   status?: Prisma.SortOrder
+  seats?: Prisma.SortOrder
   amount?: Prisma.SortOrder
   currency?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -412,6 +439,7 @@ export type BookingMinOrderByAggregateInput = {
 }
 
 export type BookingSumOrderByAggregateInput = {
+  seats?: Prisma.SortOrder
   amount?: Prisma.SortOrder
 }
 
@@ -442,6 +470,7 @@ export type BookingSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   eventId?: boolean
   userId?: boolean
   status?: boolean
+  seats?: boolean
   amount?: boolean
   currency?: boolean
   createdAt?: boolean
@@ -453,6 +482,7 @@ export type BookingSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exten
   eventId?: boolean
   userId?: boolean
   status?: boolean
+  seats?: boolean
   amount?: boolean
   currency?: boolean
   createdAt?: boolean
@@ -464,6 +494,7 @@ export type BookingSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exten
   eventId?: boolean
   userId?: boolean
   status?: boolean
+  seats?: boolean
   amount?: boolean
   currency?: boolean
   createdAt?: boolean
@@ -475,13 +506,14 @@ export type BookingSelectScalar = {
   eventId?: boolean
   userId?: boolean
   status?: boolean
+  seats?: boolean
   amount?: boolean
   currency?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type BookingOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "eventId" | "userId" | "status" | "amount" | "currency" | "createdAt" | "updatedAt", ExtArgs["result"]["booking"]>
+export type BookingOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "eventId" | "userId" | "status" | "seats" | "amount" | "currency" | "createdAt" | "updatedAt", ExtArgs["result"]["booking"]>
 
 export type $BookingPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "Booking"
@@ -491,6 +523,7 @@ export type $BookingPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     eventId: string
     userId: string
     status: $Enums.BookingStatus
+    seats: number
     amount: number
     currency: string
     createdAt: Date
@@ -922,6 +955,7 @@ export interface BookingFieldRefs {
   readonly eventId: Prisma.FieldRef<"Booking", 'String'>
   readonly userId: Prisma.FieldRef<"Booking", 'String'>
   readonly status: Prisma.FieldRef<"Booking", 'BookingStatus'>
+  readonly seats: Prisma.FieldRef<"Booking", 'Int'>
   readonly amount: Prisma.FieldRef<"Booking", 'Int'>
   readonly currency: Prisma.FieldRef<"Booking", 'String'>
   readonly createdAt: Prisma.FieldRef<"Booking", 'DateTime'>

@@ -10,4 +10,6 @@ export interface EventCommandRepository {
     update(event: Event): Promise<void>;
 
     delete(id: string): Promise<void>;
+
+    updateReservedSeats(event: Event): Promise<number>;
 }

@@ -28,6 +28,7 @@ export class Booking {
         public readonly id: BookingId,
         public readonly eventId: EventId,
         public readonly userId: UserId,
+        public readonly seats: number,
         public status: BookingStatus,
         public readonly totalAmount: Money,
     ) {}
@@ -36,12 +37,14 @@ export class Booking {
         eventId,
         userId,
         amount,
+        seats,
         currency,
     }: CreateBooking): Booking {
         return new Booking(
             BookingId.generate(),
             new EventId(eventId),
             new UserId(userId),
+            seats,
             BOOKING_STATUS.PENDING_PAYMENT,
             new Money(amount, currency),
         );
@@ -52,6 +55,7 @@ export class Booking {
         eventId,
         userId,
         status,
+        seats,
         amount,
         currency,
     }: Omit<BookingRecord, "createdAt" | "updatedAt">): Booking {
@@ -59,6 +63,7 @@ export class Booking {
             BookingId.from(id),
             new EventId(eventId),
             new UserId(userId),
+            seats,
             status,
             new Money(amount, currency),
         );
@@ -94,6 +99,10 @@ export class Booking {
 
     getTotalAmount(): Money {
         return this.totalAmount;
+    }
+
+    getSeats(): number {
+        return this.seats;
     }
 
     private transition(to: BookingStatus) {

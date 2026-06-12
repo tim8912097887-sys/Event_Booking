@@ -6,6 +6,9 @@ import { InvalidUserIdError } from "#domain/errors/user-id.error.js";
 import { BookingNotFoundError } from "#application/errors/booking-not-found.js";
 import { InvalidBookingIdError } from "#domain/errors/booking-id.error.js";
 import { InvalidTransactionError } from "#domain/errors/booking.error.js";
+import { SeatUnavailableError } from "#application/errors/seat-unavailable.error.js";
+import { SeatConflictError } from "#application/errors/seat-conflict.error.js";
+import { EventNotFoundError } from "#application/errors/event-not-found.error.js";
 
 export function registerErrorHandler(fastify: FastifyInstance) {
     fastify.setErrorHandler((error, request, reply) => {
@@ -28,11 +31,26 @@ export function registerErrorHandler(fastify: FastifyInstance) {
                 .send(errorResponse("BookingNotFoundError", error.message));
         }
 
+        if (error instanceof EventNotFoundError) {
+            request.log.info(
+                {
+                    error: error.name,
+                    eventId: request.params,
+                },
+                error.message,
+            );
+            return reply
+                .status(404)
+                .send(errorResponse("EventNotFoundError", error.message));
+        }
+
         if (
             error instanceof InvalidUserIdError ||
             error instanceof InvalidEventIdError ||
             error instanceof InvalidBookingIdError ||
-            error instanceof InvalidTransactionError
+            error instanceof InvalidTransactionError ||
+            error instanceof SeatUnavailableError ||
+            error instanceof SeatConflictError
         ) {
             return reply
                 .status(400)
