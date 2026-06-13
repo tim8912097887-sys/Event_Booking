@@ -11,7 +11,7 @@ export class CancelBookingUseCase extends BookingUseCaseBase {
     }
     async execute(id: string): Promise<void> {
         const existingBooking = await this.getBookingOrFail(id);
-        this.eventService.releaseSeats(
+        await this.eventService.releaseSeats(
             existingBooking.getEventId(),
             existingBooking.getSeats(),
         );

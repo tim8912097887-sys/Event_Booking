@@ -50,7 +50,6 @@ class AppServer {
                 port: env.PORT,
             });
 
-            this.setupProcessHandlers();
             // Subscribe publisher and telemetry to shutdown
             subscribeShutdown(async () => await publisher.stop());
             subscribeShutdown(async () => await stopTelemetry());

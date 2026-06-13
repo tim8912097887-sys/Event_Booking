@@ -14,8 +14,16 @@ export class CreateBookingUseCase {
             createBookingDto.eventId,
             createBookingDto.seats,
         );
-        const booking = Booking.create(createBookingDto);
-        const createdBooking = await this.repository.save(booking);
-        return createdBooking.id;
+        try {
+            const booking = Booking.create(createBookingDto);
+            await this.repository.save(booking);
+            return booking.id.getValue();
+        } catch (error) {
+            await this.eventService.releaseSeats(
+                createBookingDto.eventId,
+                createBookingDto.seats,
+            );
+            throw error;
+        }
     }
 }

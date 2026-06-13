@@ -46,8 +46,6 @@ class AppServer {
                 service: "event-service",
                 port: env.PORT,
             });
-
-            this.setupProcessHandlers();
         } catch (error) {
             logger.error({
                 event: "server_start_failed",
