@@ -1,14 +1,16 @@
 import { PrometheusEventMetrics } from "#infrastructure/metrics/prometheus-event.metric.js";
-import { EventNotFoundError } from "../errors/event-not-found.error.js";
+import { EventUseCaseBase } from "../port/base-event.use-case.js";
 import { EventCommandRepository } from "../port/event-command.repository.js";
 import { Tracer } from "../port/event-trace.js";
 
-export class ChangeEventDescriptionUseCase {
+export class ChangeEventDescriptionUseCase extends EventUseCaseBase {
     constructor(
-        private readonly repository: EventCommandRepository,
+        protected readonly repository: EventCommandRepository,
         private readonly tracer: Tracer,
         private readonly metrics: PrometheusEventMetrics,
-    ) {}
+    ) {
+        super(repository);
+    }
 
     async execute(eventId: string, newDescription: string): Promise<void> {
         return this.tracer.startActiveSpan(
@@ -17,10 +19,7 @@ export class ChangeEventDescriptionUseCase {
                 await this.metrics.trackOperation(
                     "change-description",
                     async () => {
-                        const event = await this.repository.findById(eventId);
-                        if (!event) {
-                            throw new EventNotFoundError(eventId);
-                        }
+                        const event = await this.getEventOrFail(eventId);
                         event.changeDescription(newDescription);
                         await this.repository.update(event);
                     },

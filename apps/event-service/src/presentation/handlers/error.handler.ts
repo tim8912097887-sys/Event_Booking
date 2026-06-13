@@ -8,6 +8,7 @@ import {
     EventDeletedModificationError,
     EventAlreadyDeletedError,
     PublishedEventDeletionError,
+    EventNotPublishedError,
 } from "#domain/errors/entity.error.js";
 import { errorResponse } from "../response/error.js";
 import { InvalidEventCapacityError } from "#domain/errors/event-capacity.error.js";
@@ -17,6 +18,9 @@ import { InvalidEventIdError } from "#domain/errors/event-id.error.js";
 import { InvalidEventNameError } from "#domain/errors/event-name.error.js";
 import { InvalidEventPriceError } from "#domain/errors/event-price.error.js";
 import { InvalidUserIdError } from "#domain/errors/user-id.error.js";
+import { CapacityExceededError } from "#domain/errors/capacity-exceeded.error.js";
+import { SeatConflictError } from "#application/errors/seat-conflict.error.js";
+import { InsufficientReservedSeatsError } from "#domain/errors/insufficient-reserved-seats.error.js";
 
 export function registerErrorHandler(fastify: FastifyInstance) {
     fastify.setErrorHandler((error, request, reply) => {
@@ -39,6 +43,46 @@ export function registerErrorHandler(fastify: FastifyInstance) {
                 .send(errorResponse("EventNotFoundError", error.message));
         }
 
+        if (error instanceof CapacityExceededError) {
+            return reply
+                .status(422)
+                .send(errorResponse("CapacityExceededError", error.message));
+        }
+
+        if (error instanceof SeatConflictError) {
+            return reply
+                .status(409)
+                .send(errorResponse("SeatConflictError", error.message));
+        }
+
+        if (error instanceof InsufficientReservedSeatsError) {
+            return reply
+                .status(422)
+                .send(
+                    errorResponse(
+                        "InsufficientReservedSeatsError",
+                        error.message,
+                    ),
+                );
+        }
+
+        if (error instanceof EventDeletedModificationError) {
+            return reply
+                .status(422)
+                .send(
+                    errorResponse(
+                        "EventDeletedModificationError",
+                        error.message,
+                    ),
+                );
+        }
+
+        if (error instanceof EventNotPublishedError) {
+            return reply
+                .status(422)
+                .send(errorResponse("EventNotPublishedError", error.message));
+        }
+
         if (
             error instanceof InvalidUserIdError ||
             error instanceof InvalidEventPriceError ||
@@ -50,8 +94,7 @@ export function registerErrorHandler(fastify: FastifyInstance) {
             error instanceof PublishedEventDeletionError ||
             error instanceof EventAlreadyDeletedError ||
             error instanceof EventAlreadyCancelledError ||
-            error instanceof EventNotDraftError ||
-            error instanceof EventDeletedModificationError
+            error instanceof EventNotDraftError
         ) {
             return reply
                 .status(400)

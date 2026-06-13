@@ -29,3 +29,9 @@ export class EventAlreadyCancelledError extends DomainError {
         super("Event is already cancelled");
     }
 }
+
+export class EventNotPublishedError extends DomainError {
+    constructor() {
+        super("Event is not published");
+    }
+}

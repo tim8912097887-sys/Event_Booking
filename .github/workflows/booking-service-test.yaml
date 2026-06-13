@@ -1,0 +1,44 @@
+name: CI-booking-service-Test
+on:
+    push:
+        branches:
+            - main
+            - dev
+            - feat/**
+            - fix/**
+        paths:
+            - "apps/booking-service/**"
+            - ".github/workflows/booking-service-test.yaml"
+            - "packages/**"
+    pull_request:
+        branches:
+            - main
+            - dev
+permissions:
+    contents: read
+concurrency:
+    group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.ref }}
+    cancel-in-progress: ${{ github.event_name == 'pull_request' || github.ref != 'refs/heads/main' }}
+
+jobs:
+    booking-service-test:
+        runs-on: ubuntu-latest
+        strategy:
+            matrix:
+                node-version: [20, 22]
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+            - name: Initialize Environment
+              uses: ./.github/actions/setup-node-and-cache
+              with:
+                  node-version: ${{ matrix.node-version }}
+                  pnpm-version: 10.26.1
+            # Build shared logger first
+            - name: Build Shared Logger
+              run: pnpm --filter @event-booking/logger run build
+            # Build shared message broker
+            - name: Build Shared Message Broker
+              run: pnpm --filter @event-booking/message-broker run build
+            - name: Run tests
+              run: pnpm run --filter ./apps/booking-service test

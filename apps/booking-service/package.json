@@ -1,0 +1,41 @@
+{
+    "name": "booking-service",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "type": "module",
+    "imports": {
+        "#*": "./dist/*"
+    },
+    "scripts": {
+        "build": "tsc -p tsconfig.build.json",
+        "lint": "eslint ./src",
+        "lint:fix": "eslint ./src --fix",
+        "test": "vitest run",
+        "test:watch": "vitest",
+        "test:coverage": "vitest run --coverage"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "packageManager": "pnpm@10.26.1",
+    "dependencies": {
+        "@event-booking/logger": "workspace:*",
+        "@event-booking/message-broker": "workspace:*",
+        "@prisma/adapter-pg": "catalog:",
+        "@prisma/client": "catalog:",
+        "axios": "catalog:",
+        "dotenv": "catalog:",
+        "fastify": "catalog:",
+        "fastify-type-provider-zod": "catalog:",
+        "pg": "catalog:",
+        "prisma": "catalog:",
+        "zod": "catalog:"
+    },
+    "devDependencies": {
+        "@types/node": "catalog:",
+        "@types/pg": "catalog:",
+        "tsx": "catalog:",
+        "typescript": "catalog:"
+    }
+}

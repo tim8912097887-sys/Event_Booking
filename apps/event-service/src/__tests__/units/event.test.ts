@@ -7,12 +7,15 @@ import {
     EventAlreadyDeletedError,
     PublishedEventDeletionError,
     EventAlreadyCancelledError,
+    EventNotPublishedError,
 } from "#domain/errors/entity.error.js";
 import { InvalidEventDescriptionError } from "#domain/errors/event-description.error.js";
 import { InvalidEventDateError } from "#domain/errors/event-date.error.js";
 import { InvalidEventCapacityError } from "#domain/errors/event-capacity.error.js";
 import { InvalidEventPriceError } from "#domain/errors/event-price.error.js";
 import { InvalidEventNameError } from "#domain/errors/event-name.error.js";
+import { CapacityExceededError } from "#domain/errors/capacity-exceeded.error.js";
+import { InsufficientReservedSeatsError } from "#domain/errors/insufficient-reserved-seats.error.js";
 
 describe("Event", () => {
     describe("create", () => {
@@ -366,6 +369,219 @@ describe("Event", () => {
 
             expect(() => event.changeCapacity(20)).toThrow(
                 new EventDeletedModificationError(),
+            );
+        });
+    });
+
+    describe("Reserve / Release Seats", () => {
+        it("when reserve seats on published event should increase reserved seats", () => {
+            const event = Event.create({
+                name: "event name",
+                description: "event description",
+                creatorId: crypto.randomUUID(),
+                date: "2026-11-01",
+                capacity: 10,
+                price: 10,
+            });
+
+            event.publish("owner@example.com");
+            event.reserveSeat(4);
+
+            expect(event.getReservedSeats()).toBe(4);
+            expect(event.getVersion()).toBe(2);
+        });
+
+        it("when reserve seats exactly matches available capacity should succeed", () => {
+            const event = Event.create({
+                name: "event name",
+                description: "event description",
+                creatorId: crypto.randomUUID(),
+                date: "2026-11-01",
+                capacity: 10,
+                price: 10,
+            });
+
+            event.publish("owner@example.com");
+            event.reserveSeat(10);
+
+            expect(event.getReservedSeats()).toBe(10);
+        });
+
+        it("when reserve seats exceed capacity should throw CapacityExceededError", () => {
+            const event = Event.create({
+                name: "event name",
+                description: "event description",
+                creatorId: crypto.randomUUID(),
+                date: "2026-11-01",
+                capacity: 10,
+                price: 10,
+            });
+
+            event.publish("owner@example.com");
+
+            expect(() => event.reserveSeat(11)).toThrow(
+                new CapacityExceededError(),
+            );
+        });
+
+        it("when reserve seats on cancelled event should throw EventNotPublishedError", () => {
+            const event = Event.create({
+                name: "event name",
+                description: "event description",
+                creatorId: crypto.randomUUID(),
+                date: "2026-11-01",
+                capacity: 10,
+                price: 10,
+            });
+
+            event.cancel();
+
+            expect(() => event.reserveSeat(1)).toThrow(
+                new EventNotPublishedError(),
+            );
+        });
+
+        it("when reserve seats on deleted published event should throw EventAlreadyDeletedError", () => {
+            const event = Event.reconstitute({
+                id: crypto.randomUUID(),
+                name: "event name",
+                slug: "event-name",
+                description: "event description",
+                creatorId: crypto.randomUUID(),
+                date: new Date("2026-11-01T00:00:00.000Z"),
+                capacity: 10,
+                reservedSeats: 0,
+                version: 1,
+                price: 10,
+                status: "PUBLISHED",
+                deletedAt: new Date(),
+            });
+
+            expect(() => event.reserveSeat(1)).toThrow(
+                new EventAlreadyDeletedError(),
+            );
+        });
+
+        it("when release seats on published event should decrease reserved seats", () => {
+            const event = Event.create({
+                name: "event name",
+                description: "event description",
+                creatorId: crypto.randomUUID(),
+                date: "2026-11-01",
+                capacity: 10,
+                price: 10,
+            });
+
+            event.publish("owner@example.com");
+            event.reserveSeat(5);
+            event.releaseSeat(2);
+
+            expect(event.getReservedSeats()).toBe(3);
+            expect(event.getVersion()).toBe(3);
+        });
+
+        it("when release seats down to zero should set reserved seats to zero", () => {
+            const event = Event.create({
+                name: "event name",
+                description: "event description",
+                creatorId: crypto.randomUUID(),
+                date: "2026-11-01",
+                capacity: 10,
+                price: 10,
+            });
+
+            event.publish("owner@example.com");
+            event.reserveSeat(3);
+            event.releaseSeat(3);
+
+            expect(event.getReservedSeats()).toBe(0);
+        });
+
+        it("when release seats more than reserved should throw InsufficientReservedSeatsError", () => {
+            const event = Event.create({
+                name: "event name",
+                description: "event description",
+                creatorId: crypto.randomUUID(),
+                date: "2026-11-01",
+                capacity: 10,
+                price: 10,
+            });
+
+            event.publish("owner@example.com");
+            event.reserveSeat(3);
+
+            expect(() => event.releaseSeat(4)).toThrow(
+                new InsufficientReservedSeatsError(),
+            );
+        });
+
+        it("when release seats on published event with no reserved seats should throw InsufficientReservedSeatsError", () => {
+            const event = Event.create({
+                name: "event name",
+                description: "event description",
+                creatorId: crypto.randomUUID(),
+                date: "2026-11-01",
+                capacity: 10,
+                price: 10,
+            });
+
+            event.publish("owner@example.com");
+
+            expect(() => event.releaseSeat(1)).toThrow(
+                new InsufficientReservedSeatsError(),
+            );
+        });
+
+        it("when release seats on draft event should throw EventNotPublishedError", () => {
+            const event = Event.create({
+                name: "event name",
+                description: "event description",
+                creatorId: crypto.randomUUID(),
+                date: "2026-11-01",
+                capacity: 10,
+                price: 10,
+            });
+
+            expect(() => event.releaseSeat(1)).toThrow(
+                new EventNotPublishedError(),
+            );
+        });
+
+        it("when release seats on cancelled event should throw EventNotPublishedError", () => {
+            const event = Event.create({
+                name: "event name",
+                description: "event description",
+                creatorId: crypto.randomUUID(),
+                date: "2026-11-01",
+                capacity: 10,
+                price: 10,
+            });
+
+            event.cancel();
+
+            expect(() => event.releaseSeat(1)).toThrow(
+                new EventNotPublishedError(),
+            );
+        });
+
+        it("when release seats on deleted published event should throw EventAlreadyDeletedError", () => {
+            const event = Event.reconstitute({
+                id: crypto.randomUUID(),
+                name: "event name",
+                slug: "event-name",
+                description: "event description",
+                creatorId: crypto.randomUUID(),
+                date: new Date("2026-11-01T00:00:00.000Z"),
+                capacity: 10,
+                reservedSeats: 5,
+                version: 2,
+                price: 10,
+                status: "PUBLISHED",
+                deletedAt: new Date(),
+            });
+
+            expect(() => event.releaseSeat(1)).toThrow(
+                new EventAlreadyDeletedError(),
             );
         });
     });

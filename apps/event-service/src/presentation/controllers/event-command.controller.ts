@@ -10,6 +10,8 @@ import { IEvent } from "#application/port/i-event.js";
 import { successResponse } from "../response/success.js";
 import { ChangeEventNameUseCase } from "#application/use-cases/change-event-name.use-case.js";
 import { ChangeEventDescriptionUseCase } from "#application/use-cases/change-event-description.use-case.js";
+import { ReservedSeatUseCase } from "#application/use-cases/reserve-seat.use-case.js";
+import { ReleaseSeatUseCase } from "#application/use-cases/release-seat.use-case.js";
 
 export class EventCommandController {
     constructor(
@@ -22,7 +24,31 @@ export class EventCommandController {
         private readonly changeEventPriceUseCase: ChangeEventPriceUseCase,
         private readonly changeEventNameUseCase: ChangeEventNameUseCase,
         private readonly changeEventDescriptionUseCase: ChangeEventDescriptionUseCase,
+        private readonly reserveSeatUseCase: ReservedSeatUseCase,
+        private readonly releaseSeatUseCase: ReleaseSeatUseCase,
     ) {}
+
+    reserve = async (request: FastifyRequest, reply: FastifyReply) => {
+        const { id } = request.params as {
+            id: string;
+        };
+        const { requestedSeats } = request.body as { requestedSeats: number };
+
+        await this.reserveSeatUseCase.execute(id, requestedSeats);
+
+        return reply.status(204).send();
+    };
+
+    release = async (request: FastifyRequest, reply: FastifyReply) => {
+        const { id } = request.params as {
+            id: string;
+        };
+        const { requestedSeats } = request.body as { requestedSeats: number };
+
+        await this.releaseSeatUseCase.execute(id, requestedSeats);
+
+        return reply.status(204).send();
+    };
 
     cancel = async (request: FastifyRequest, reply: FastifyReply) => {
         const { id } = request.params as {

@@ -93,6 +93,24 @@ services:
             start_period: 10s
         networks:
             - event-booking-network
+    booking-db:
+        image: postgres:14-alpine
+        environment:
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: password
+            POSTGRES_DB: booking-service
+        ports:
+            - 5433:5432
+        volumes:
+            - booking-service-db-data:/var/lib/postgresql/data
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U postgres -d booking-service"]
+            interval: 5s
+            timeout: 5s
+            retries: 5
+            start_period: 10s
+        networks:
+            - event-booking-network
     notification-db:
         image: mongo:latest
         container_name: notification-db
@@ -188,9 +206,51 @@ services:
             retries: 5
             start_period: 20s
         restart: always
+    booking-service-migrations:
+        build:
+            context: .
+            dockerfile: ./apps/booking-service/Dockerfile
+        env_file:
+            - ./apps/booking-service/.env.dev
+        depends_on:
+            booking-db:
+                condition: service_healthy
+        command: npx prisma migrate deploy --schema=./prisma/schema.prisma
+        networks:
+            - event-booking-network
+    booking-service:
+        build:
+            context: .
+            dockerfile: ./apps/booking-service/Dockerfile
+        env_file:
+            - ./apps/booking-service/.env.dev
+        ports:
+            - "3003:3003"
+        networks:
+            - event-booking-network
+        depends_on:
+            booking-db:
+                condition: service_healthy
+            booking-service-migrations:
+                condition: service_completed_successfully
+        healthcheck:
+            test:
+                [
+                    "CMD",
+                    "wget",
+                    "--spider",
+                    "-q",
+                    "http://127.0.0.1:3003/health",
+                ]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+            start_period: 20s
+        restart: always
 volumes:
     notification-db-data:
     event-service-db-data:
+    booking-service-db-data:
     kafka-data:
 networks:
     event-booking-network:

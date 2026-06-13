@@ -4,7 +4,7 @@ import { NodePgDatabase } from "drizzle-orm/node-postgres";
 import { events } from "./schema/event.js";
 import { Event } from "#domain/event/entities/event.js";
 import { EventMapper } from "./event-mapper.js";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { outboxEvents } from "./schema/outbox-event.js";
 import { context, propagation } from "@opentelemetry/api";
 import { PrometheusEventMetrics } from "../metrics/prometheus-event.metric.js";
@@ -18,7 +18,10 @@ export class PostgresEventCommandRepository implements EventCommandRepository {
     async save(event: Event): Promise<void> {
         await this.metrics.trackDbQuery("save", async () => {
             const eventData = EventMapper.toPersistence(event);
-            await this.db.insert(events).values(eventData).execute();
+            await this.db
+                .insert(events)
+                .values({ ...eventData, updatedAt: new Date() })
+                .execute();
         });
     }
 
@@ -52,13 +55,31 @@ export class PostgresEventCommandRepository implements EventCommandRepository {
         });
     }
 
+    async updateReservedSeats(event: Event): Promise<number> {
+        return this.metrics.trackDbQuery("updateReservedSeats", async () => {
+            const eventData = EventMapper.toPersistence(event);
+            const result = await this.db
+                .update(events)
+                .set({ ...eventData, updatedAt: new Date() })
+                .where(
+                    and(
+                        eq(events.id, event.getId()),
+                        eq(events.version, event.getVersion() - 1),
+                    ),
+                )
+                .execute();
+            const updated = result.rowCount ?? 0;
+            return updated;
+        });
+    }
+
     async update(event: Event): Promise<void> {
         await this.metrics.trackDbQuery("update", async () => {
             const eventData = EventMapper.toPersistence(event);
             await this.db.transaction(async (trx) => {
                 await trx
                     .update(events)
-                    .set(eventData)
+                    .set({ ...eventData, updatedAt: new Date() })
                     .where(eq(events.id, event.getId()))
                     .execute();
                 const domainEvents = event.getDomainEvents();
@@ -86,7 +107,7 @@ export class PostgresEventCommandRepository implements EventCommandRepository {
         await this.metrics.trackDbQuery("delete", async () => {
             await this.db
                 .update(events)
-                .set({ deletedAt: new Date() })
+                .set({ deletedAt: new Date(), updatedAt: new Date() })
                 .where(eq(events.id, id))
                 .execute();
         });

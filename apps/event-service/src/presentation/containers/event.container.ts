@@ -20,6 +20,8 @@ import { EventProducer } from "#infrastructure/messaging/event-producer.js";
 import { subscribeShutdown } from "#infrastructure/shared/shutdown.js";
 import { OpenTelemetryTracer } from "#infrastructure/traces/otel-tracer.js";
 import { PrometheusEventMetrics } from "#infrastructure/metrics/prometheus-event.metric.js";
+import { ReleaseSeatUseCase } from "#application/use-cases/release-seat.use-case.js";
+import { ReservedSeatUseCase } from "#application/use-cases/reserve-seat.use-case.js";
 
 // Initialize metrics
 export const metric = new PrometheusEventMetrics();
@@ -50,6 +52,8 @@ export const eventCommandController = new EventCommandController(
     new ChangeEventPriceUseCase(commandRepository, tracer, metric),
     new ChangeEventNameUseCase(commandRepository, tracer, metric),
     new ChangeEventDescriptionUseCase(commandRepository, tracer, metric),
+    new ReservedSeatUseCase(commandRepository, tracer, metric),
+    new ReleaseSeatUseCase(commandRepository, tracer, metric),
 );
 
 export const eventQueryController = new EventQueryController(
