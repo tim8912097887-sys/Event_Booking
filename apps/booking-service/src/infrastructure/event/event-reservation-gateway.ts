@@ -9,9 +9,11 @@ import { SeatUnavailableError } from "#application/errors/seat-unavailable.error
 
 export class EventHttpClient implements EventServicePort {
     async reserveSeats(eventId: string, seats: number): Promise<void> {
+        // Encode the eventId to ensure it can never break out of its path segment
+        const safeEventId = encodeURIComponent(eventId);
         await this.request(
             () =>
-                httpClient.post(`/events/${eventId}/reserve`, {
+                httpClient.post(`/events/${safeEventId}/reserve`, {
                     requestedSeats: seats,
                 }),
             eventId,
@@ -19,9 +21,10 @@ export class EventHttpClient implements EventServicePort {
     }
 
     async releaseSeats(eventId: string, seats: number): Promise<void> {
+        const safeEventId = encodeURIComponent(eventId);
         await this.request(
             () =>
-                httpClient.post(`/events/${eventId}/release`, {
+                httpClient.post(`/events/${safeEventId}/release`, {
                     requestedSeats: seats,
                 }),
             eventId,
