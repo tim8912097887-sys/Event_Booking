@@ -26,5 +26,8 @@ jobs:
               with:
                   node-version: ${{ inputs.node-version }}
                   pnpm-version: ${{ inputs.pnpm-version }}
+            # Build internal dependencies
+            - name: Build internal dependencies
+              run: pnpm run --filter ..../apps/${{ inputs.service-name }} build
             - name: Run build
               run: pnpm --filter ./apps/${{ inputs.service-name }}... run build
