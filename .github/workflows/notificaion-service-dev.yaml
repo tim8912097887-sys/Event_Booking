@@ -1,0 +1,36 @@
+name: CI-notification-service
+on:
+    push:
+        branches:
+            - main
+            - dev
+            - feat/**
+            - fix/**
+        paths:
+            - "apps/notification-service/**"
+            - ".github/workflows/notification-service-dev.yaml"
+            - ".github/workflows/lint-reusable.yaml"
+            - ".github/workflows/build-reusable.yaml"
+            - "packages/**"
+    pull_request:
+        branches:
+            - main
+            - dev
+permissions:
+    contents: read
+concurrency:
+    group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.ref }}
+    cancel-in-progress: ${{ github.event_name == 'pull_request' || github.ref != 'refs/heads/main' }}
+jobs:
+    notification-service-lint:
+        uses: ./.github/workflows/lint-reusable.yaml
+        with:
+            service-name: "notification-service"
+            node-version: "20"
+            pnpm-version: "10.26.1"
+    notification-service-build:
+        uses: ./.github/workflows/build-reusable.yaml
+        with:
+            service-name: "notification-service"
+            node-version: "20"
+            pnpm-version: "10.26.1"
