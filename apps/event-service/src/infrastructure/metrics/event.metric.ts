@@ -18,7 +18,7 @@ export const httpRequestDuration = new client.Histogram({
 export const eventOperationsTotal = new client.Counter({
     name: "event_operations_total",
     help: "Total number of event operations",
-    labelNames: ["action", "result"],
+    labelNames: ["operation", "result"],
     registers: [register],
 });
 
@@ -29,24 +29,8 @@ export const outboxMessagesTotal = new client.Counter({
     registers: [register],
 });
 
-export const outboxPublishDuration = new client.Histogram({
-    name: "event_outbox_publish_duration_seconds",
-    help: "Time spent publishing outbox messages",
-    labelNames: ["event_name", "result"],
-    buckets: [0.01, 0.05, 0.1, 0.5, 1, 2, 5],
-    registers: [register],
-});
-
 export const outboxPendingMessages = new client.Gauge({
     name: "event_outbox_pending_messages",
     help: "Number of pending messages in outbox",
-    registers: [register],
-});
-
-export const dbQueryDuration = new client.Histogram({
-    name: "event_db_query_duration_seconds",
-    help: "Histogram of database query durations for event-service in seconds",
-    labelNames: ["operation", "result"],
-    buckets: [0.01, 0.05, 0.1, 0.5, 1, 2, 5],
     registers: [register],
 });

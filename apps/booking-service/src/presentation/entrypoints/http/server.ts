@@ -8,6 +8,9 @@ import {
 } from "fastify-type-provider-zod";
 import { BookingRoute } from "#presentation/routes/booking.route.js";
 import { bookingController } from "#presentation/containers/booking.container.js";
+import { metricsPlugin } from "#presentation/plugins/metric.plugin.js";
+import { register } from "#infrastructure/metrics/prometheus.js";
+
 export async function initializeApp() {
     const app = Fastify({
         logger: true,
@@ -16,6 +19,19 @@ export async function initializeApp() {
 
     app.setValidatorCompiler(validatorCompiler);
     app.setSerializerCompiler(serializerCompiler);
+
+    // ======================
+    // Plugins
+    // ======================
+    await metricsPlugin(app);
+
+    // ======================
+    // Metrics endpoint
+    // ======================
+    app.get("/metrics", async (_req, res) => {
+        res.header("content-type", register.contentType);
+        res.send(await register.metrics());
+    });
 
     // ======================
     // Routes

@@ -30,7 +30,8 @@
         "fastify-type-provider-zod": "catalog:",
         "pg": "catalog:",
         "prisma": "catalog:",
-        "zod": "catalog:"
+        "zod": "catalog:",
+        "prom-client": "catalog:"
     },
     "devDependencies": {
         "@types/node": "catalog:",

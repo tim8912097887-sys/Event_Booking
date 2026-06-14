@@ -1,0 +1,29 @@
+name: CI-service-Lint
+on:
+    workflow_call:
+        inputs:
+            node-version:
+                description: Node.js version
+                required: true
+                type: string
+            pnpm-version:
+                description: Pnpm version
+                required: true
+                type: string
+            service-name:
+                description: Service name
+                required: true
+                type: string
+jobs:
+    service-lint:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+            - name: Initialize Environment
+              uses: ./.github/actions/setup-node-and-cache
+              with:
+                  node-version: ${{ inputs.node-version }}
+                  pnpm-version: ${{ inputs.pnpm-version }}
+            - name: Run lint
+              run: pnpm --filter ./apps/${{ inputs.service-name }} run lint

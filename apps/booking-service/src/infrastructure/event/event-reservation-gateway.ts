@@ -6,8 +6,11 @@ import { SeatConflictError } from "#application/errors/seat-conflict.error.js";
 import { sleep } from "../shared/retry.js";
 import { AxiosResponse } from "axios";
 import { SeatUnavailableError } from "#application/errors/seat-unavailable.error.js";
+import { PrometheusBookingMetrics } from "../metrics/prometheus-booking.metric.js";
 
 export class EventHttpClient implements EventServicePort {
+    constructor(private readonly metrics: PrometheusBookingMetrics) {}
+
     async reserveSeats(eventId: string, seats: number): Promise<void> {
         // Encode the eventId to ensure it can never break out of its path segment
         const safeEventId = encodeURIComponent(eventId);
@@ -16,6 +19,7 @@ export class EventHttpClient implements EventServicePort {
                 httpClient.post(`/events/${safeEventId}/reserve`, {
                     requestedSeats: seats,
                 }),
+            "reserve",
             eventId,
         );
     }
@@ -27,28 +31,41 @@ export class EventHttpClient implements EventServicePort {
                 httpClient.post(`/events/${safeEventId}/release`, {
                     requestedSeats: seats,
                 }),
+            "release",
             eventId,
         );
     }
 
     private async request<T>(
         fn: () => Promise<AxiosResponse<T>>,
+        operation: string,
         eventId: string,
     ): Promise<T> {
         // Handle retries for network and optimistic errors
         for (let attempt = 0; attempt < 3; attempt++) {
             try {
                 const result = await fn();
+                if (attempt > 0) {
+                    this.metrics.eventRetriesTotal(operation, "success");
+                }
+                this.metrics.eventRequestTotal(operation, "success");
                 return result.data;
             } catch (error: any) {
+                this.metrics.eventRequestTotal(operation, "fail");
                 const status = error?.response?.status;
 
                 if (!status) {
+                    if (attempt > 0) {
+                        this.metrics.eventRetriesTotal(operation, "fail");
+                    }
                     await sleep(100 * (attempt + 1));
                     continue;
                 }
 
                 if (status === 409 && attempt < 2) {
+                    if (attempt > 0) {
+                        this.metrics.eventRetriesTotal(operation, "fail");
+                    }
                     await sleep(50 * (attempt + 1));
                     continue;
                 }

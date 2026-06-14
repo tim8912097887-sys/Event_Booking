@@ -4,19 +4,27 @@ import { CancelBookingUseCase } from "#application/use-case/cancel-booking.use-c
 import { CreateBookingUseCase } from "#application/use-case/create-booking.use-case.js";
 import { BookingController } from "../controllers/booking.controller.js";
 import { EventHttpClient } from "#infrastructure/event/event-reservation-gateway.js";
+import { PrometheusBookingMetrics } from "#infrastructure/metrics/prometheus-booking.metric.js";
 
+// Initialize metrics
+export const bookingMetric = new PrometheusBookingMetrics();
 // Initialize repositories
-export const bookingRepository = new PrismaBookingRepository(prisma);
+export const bookingRepository = new PrismaBookingRepository(
+    prisma,
+    bookingMetric,
+);
 // Initialize event client
-const eventService = new EventHttpClient();
+const eventService = new EventHttpClient(bookingMetric);
 // Initialize use cases
 export const cancelBookingUseCase = new CancelBookingUseCase(
     bookingRepository,
     eventService,
+    bookingMetric,
 );
 export const createBookingUseCase = new CreateBookingUseCase(
     bookingRepository,
     eventService,
+    bookingMetric,
 );
 // Initialize controllers
 export const bookingController = new BookingController(

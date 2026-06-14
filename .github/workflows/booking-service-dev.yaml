@@ -1,0 +1,48 @@
+name: CI-booking-service
+on:
+    push:
+        branches:
+            - main
+            - dev
+            - feat/**
+            - fix/**
+        paths:
+            - "apps/booking-service/**"
+            - ".github/workflows/booking-service-dev.yaml"
+            - ".github/workflows/test-reusable.yaml"
+            - ".github/workflows/lint-reusable.yaml"
+            - ".github/workflows/build-reusable.yaml"
+            - "packages/**"
+    pull_request:
+        branches:
+            - main
+            - dev
+permissions:
+    contents: read
+concurrency:
+    group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.ref }}
+    cancel-in-progress: ${{ github.event_name == 'pull_request' || github.ref != 'refs/heads/main' }}
+jobs:
+    booking-service-lint:
+        uses: ./.github/workflows/lint-reusable.yaml
+        with:
+            service-name: "booking-service"
+            node-version: "20"
+            pnpm-version: "10.26.1"
+    booking-service-build:
+        uses: ./.github/workflows/build-reusable.yaml
+        with:
+            service-name: "booking-service"
+            node-version: "20"
+            pnpm-version: "10.26.1"
+    booking-service-test:
+        # Prevent expensive test runs if lint or build fails
+        needs: [booking-service-lint, booking-service-build]
+        strategy:
+            matrix:
+                node-version: ["20", "22"]
+        uses: ./.github/workflows/test-reusable.yaml
+        with:
+            service-name: "booking-service"
+            node-version: "${{ matrix.node-version }}"
+            pnpm-version: "10.26.1"
