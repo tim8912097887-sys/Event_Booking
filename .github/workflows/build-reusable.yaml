@@ -27,7 +27,9 @@ jobs:
                   node-version: ${{ inputs.node-version }}
                   pnpm-version: ${{ inputs.pnpm-version }}
             # Build internal dependencies
-            - name: Build internal dependencies
-              run: pnpm run --filter ..../apps/${{ inputs.service-name }} build
+            - name: Build Shared Logger
+              run: pnpm --filter @event-booking/logger run build
+            - name: Build Shared Message Broker
+              run: pnpm --filter @event-booking/message-broker run build
             - name: Run build
-              run: pnpm --filter ./apps/${{ inputs.service-name }}... run build
+              run: pnpm --filter ./apps/${{ inputs.service-name }} run build
