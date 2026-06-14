@@ -26,8 +26,8 @@ import { ReservedSeatUseCase } from "#application/use-cases/reserve-seat.use-cas
 // Initialize metrics
 export const metric = new PrometheusEventMetrics();
 // Initialize repositories
-const commandRepository = new PostgresEventCommandRepository(db, metric);
-const queryRepository = new PostgresEventQueryRepository(db, metric);
+const commandRepository = new PostgresEventCommandRepository(db);
+const queryRepository = new PostgresEventQueryRepository(db);
 // Initialize tracer
 const tracer = new OpenTelemetryTracer();
 // Initialize producers

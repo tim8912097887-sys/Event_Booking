@@ -27,9 +27,11 @@ services:
             - "9090:9090"
         depends_on:
             notification-service:
-                condition: service_healthy
+                condition: service_started
             event-service:
-                condition: service_healthy
+                condition: service_started
+            booking-service:
+                condition: service_started
         volumes:
             - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
         networks:
@@ -154,7 +156,7 @@ services:
                     "wget",
                     "--spider",
                     "-q",
-                    "http://localhost:3001/health",
+                    "http://127.0.0.1:3001/health",
                 ]
             interval: 10s
             timeout: 5s
